@@ -48,15 +48,14 @@ cancel_url:'http://localhost:8000/?canceled=1',
 res.json({url:session.url});
 });
 app.post('/api/connect/create-account',async (req,res)=>{
-const accountId = req.body.accountId;
-if (!accountId) return res.status(400).json({error:'Missing accountId'});
+const account = await stripe.accounts.create({type:'express'});
 const link = await stripe.accountLinks.create({
-account: accountId,
+account: account.id,
 refresh_url: 'https://reduces-mae-theories-variables.trycloudflare.com',
 return_url: 'https://reduces-mae-theories-variables.trycloudflare.com',
 type: 'account_onboarding',
 });
-res.json({url: link.url, accountId: accountId});
+res.json({url: link.url, accountId: account.id});
 });
 
 app.listen(3000, ()=>{
