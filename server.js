@@ -51,8 +51,8 @@ app.post('/api/connect/create-account',async (req,res)=>{
 const account = await stripe.accounts.create({type:'express'});
 const link = await stripe.accountLinks.create({
 account: account.id,
-refresh_url: 'https://reduces-mae-theories-variables.trycloudflare.com',
-return_url: 'https://reduces-mae-theories-variables.trycloudflare.com',
+refresh_url: 'https://jexali.onrender.comc',
+return_url: 'https://jexali.onrender.com',
 type: 'account_onboarding',
 });
 res.json({url: link.url, accountId: account.id});
