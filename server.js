@@ -49,7 +49,8 @@ res.json({url:session.url});
 });
 app.post('/api/connect/create-account',async (req,res)=>{
 console.log("Stripe KEY PRESENT:", !! process.env.STRIPE_SECRET_KEY, "LENGTH:",(process.env.STRIPE_SECRET_KEY ||"").length);
-const link = await stripe.accountLinks.create({
+const account = await stripe accounts.create({type: 'express',});
+ const link = await stripe.accountLinks.create({
 account: account.id,
 refresh_url: 'https://jexali.onrender.comc',
 return_url: 'https://jexali.onrender.com',
