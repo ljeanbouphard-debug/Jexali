@@ -100,7 +100,7 @@ function renderCart(){
 }
 document.getElementById("checkoutBtn").addEventListener("click",()=>{
   if(!cart.length){alert("Your cart is empty.");return;}
-fetch('http://localhost:3000/api/checkout',{
+fetch('/api/checkout',{
 method:'POST',
 headers:{ 'Content-Type' :'application/json'},
 body:JSON.stringify({cart})
