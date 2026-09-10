@@ -115,7 +115,7 @@ renderShop();
 const params=new URLSearchParams(window.location.search);
 if(params.get("success")==="1")alert("Thank you for your purchase!");
 if(params.get("canceled")==="1")alert("Payment canceled.");
-const saveStripeId=localStorage.getItem("jexaliStripeAccountId");
+const savedStripeId=localStorage.getItem("jexaliStripeAccountId");
 
 const connectStripeBtn=document.getElementById("connectStripeBtn");
 if(savedStripeId) connectStripeBtn.textContent="Stripe Connected";
