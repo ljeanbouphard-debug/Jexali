@@ -9,6 +9,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
+app.get('/api/key-length', (req, res) => {
+ res.json({ length:
+  process.env.STRIPE_SECRET_KEY? });
+});
 app.get('/api/stripe-test', async (req,res) => {
  try { const account = await stripe.accounts.retrieve();
       res.json({ ok: true, id: account.id });
