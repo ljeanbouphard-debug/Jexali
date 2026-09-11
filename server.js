@@ -3,11 +3,20 @@ const Database = require('better-sqlite3');
 const cors = require('cors')
 const express = require('express');
 const stripe = require('stripe') (process.env.STRIPE_SECRET_KEY);
+
 const db = new Database('jexali.db');
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
+app.get('/api/stripe-test', async (req,res) => {
+ try { const account = await stripe.accounts.retrieve();
+      res.json({ ok: true, id: account.id });
+     } catch (err) {
+  res.status(500).json({ ok: false,
+   error: err.message });                     
+} 
+});
 db.exec("CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, price REAL, seller TEXT, stock INTEGER DEFAULT 0)");
 app.get('/api/products', (req,res)=>{
 const products = db.prepare('SELECT * FROM products').all();
