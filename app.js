@@ -63,7 +63,8 @@ document.getElementById("productForm").addEventListener("submit",e=>{
   const image=document.getElementById("pImage").value.trim();
   const desc=document.getElementById("pDesc").value.trim();
   if(!name || !desc || !(price>0)){document.getElementById("formMsg").textContent="Please complete all required fields.";return;}
-  const p={id:"p"+Date.now(),name,price,category,image,desc};
+  const sellerStripeId=localStorage.getItem("jexaliStripeAccountId");
+  const p={id:"p"+Date.now(),name,price,category,image,desc,seller:sellerStripeId};
   customProducts.unshift(p);
   localStorage.setItem("jexaliProducts",JSON.stringify(customProducts));
   e.target.reset();
