@@ -47,6 +47,7 @@ cart.length===0)
  return res.status(400).json({error:'Cart is empty'});
 const session = await stripe.checkout.sessions.create({
 mode:'payment',
+branding_settings: { display_name:' Jexali ' },
 line_items: cart.map(item=>({
 price_data:{
 currency:'usd',
