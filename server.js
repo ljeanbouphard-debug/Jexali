@@ -46,9 +46,9 @@ const cart=req.body.cart;
  if(!Array.isArray(cart)||
 cart.length===0)
  return res.status(400).json({error:'Cart is empty'});
- const hasSeller=cart.some(item=>item.seller;
+ const hasSeller=cart.some(item=>item.seller);
  const allSameSeller=hasSeller&&cart.every(item=>
-  item.seller===cart[0].seller;
+  item.seller===cart[0].seller);
  const sellerStripeId=allSameSeller?
   cart[0].seller:null;
 const session = await stripe.checkout.sessions.create({
