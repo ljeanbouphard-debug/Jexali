@@ -65,7 +65,7 @@ unit_amount:Math.round(item.price*100),
 quantity:item.quantity||1,
 })),
 ...(sellerStripeId ? {payment_intent_data:
-{application _fee_amount: Math.round(cart.reduce((sum, item)=>
+{application_fee_amount: Math.round(cart.reduce((sum, item)=>
  sum + Math.round(item.price * 100)
  * (item.quantity || 1), 0
         ) * 0.10
