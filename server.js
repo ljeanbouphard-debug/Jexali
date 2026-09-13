@@ -42,9 +42,15 @@ res.status(201).json({id:r.lastInsertRowid});
 });
 app.post('/api/checkout',async (req,res)=>{
 const cart=req.body.cart;
+ 
  if(!Array.isArray(cart)||
 cart.length===0)
  return res.status(400).json({error:'Cart is empty'});
+ const hasSeller=cart.some(item=>item.seller;
+ const allSameSeller=hasSeller&&cart.every(item=>
+  item.seller===cart[0].seller;
+ const sellerStripeId=allSameSeller?
+  cart[0].seller:null;
 const session = await stripe.checkout.sessions.create({
 mode:'payment',
 branding_settings: { display_name:' Jexali ' },
@@ -58,9 +64,13 @@ unit_amount:Math.round(item.price*100),
 },
 quantity:item.quantity||1,
 })),
+...(sellerStripeId ? {payment_intent_data:
+ {transfer_data:
+ {destination:sellerStripeId}}} : {}), 
 success_url:'http://localhost:8000/?success=1&session_id={CHECKOUT_SESSION_ID}',
 cancel_url:'http://localhost:8000/?canceled=1',
 });
+ 
 res.json({url:session.url});
 });
 app.post('/api/connect/create-account',async (req,res)=>{
