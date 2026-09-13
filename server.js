@@ -65,8 +65,17 @@ unit_amount:Math.round(item.price*100),
 quantity:item.quantity||1,
 })),
 ...(sellerStripeId ? {payment_intent_data:
- {transfer_data:
- {destination:sellerStripeId}}} : {}), 
+{application _fee_amount: Math.round(cart.reduce((sum, item)=>
+ sum + Math.round(item.price * 100)
+ * (item.quantity || 1), 0
+        ) * 0.10
+       ),
+ transfer_data: {
+  destination: sellerStripeId
+ }
+}
+                     } : {}),
+                                                                           
 success_url:'http://localhost:8000/?success=1&session_id={CHECKOUT_SESSION_ID}',
 cancel_url:'http://localhost:8000/?canceled=1',
 });
