@@ -83,11 +83,25 @@ cancel_url:'http://localhost:8000/?canceled=1',
 res.json({url:session.url});
 });
 app.post('/api/connect/create-account',async (req,res)=>{
-console.log("Stripe KEY PRESENT:", !! process.env.STRIPE_SECRET_KEY, "LENGTH:",(process.env.STRIPE_SECRET_KEY ||"").length);
-const account = await stripe.accounts.create({type: 'express',});
+const email = String(req.body.email ||
+ '').trim().toLowerCase();
+ if (!email) return
+ res.status(400).json({error:'Email is required'});
+ const existingSeller = db.prepare('SELECT * FROM sellers WHERE email = ?').get(email);
+ const account = existingSeller &&
+  existingSeller.stripe_account_id ? {id:
+   existingSeller.stripe_account_id} : await
+ stripe.accounts.create({type:'express'});
+
+if (existingSeller) db.prepare('UPDATE
+sellers SET stripe_account_id = ? WHERE
+ email = ?').run(account.id, email);
+ else db.prepare('INSERT INTO sellers
+ (sripe_account_id, email) VALUES
+ (?, ?)').run(account.id, email);
  const link = await stripe.accountLinks.create({
 account: account.id,
-refresh_url: 'https://jexali.onrender.comc',
+refresh_url: 'https://jexali.onrender.com',
 return_url: 'https://jexali.onrender.com',
 type: 'account_onboarding',
 });
