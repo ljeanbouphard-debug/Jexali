@@ -16,7 +16,7 @@ fetch('/api/products')
 .then(res(=>res.json())
 .then(products=>{
   customProducts=products;
-  renderShop()
+  
 });
 const money=n=>"$"+Number(n).toFixed(2);
 
