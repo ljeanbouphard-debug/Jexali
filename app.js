@@ -76,7 +76,7 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
         name:name,
           price:price,
         seller:sellerStripeId,
-        stock:0
+        stock:0,
         category: category,
         image: image,
         description: desc
