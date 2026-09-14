@@ -1,10 +1,10 @@
 require('dotenv').config();
-const Database = require('better-sqlite3');
+const { Pool } = require('pg');
 const cors = require('cors')
 const express = require('express');
 const stripe = require('stripe') (process.env.STRIPE_SECRET_KEY);
 
-const db = new Database('jexali.db');
+const db = new Pool({connectionString: process.env.DATABASE_URL });
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -23,22 +23,17 @@ app.get('/api/stripe-test', async (req,res) => {
    error: err.message });                     
 } 
 });
-db.exec("CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, price REAL, seller TEXT, stock INTEGER DEFAULT 0)");
-app.get('/api/products', (req,res)=>{
-const products = db.prepare('SELECT * FROM products').all();
+db.query("CREATE TABLE IF NOT EXISTS products (id SERIAL PRIMARY KEY, name TEXT, price REAL, seller TEXT, stock INTEGER DEFAULT 0)");
+app.get('/api/products', async (req,res)=>{
+const products = (await db.query('SELECT * FROM products')).rows;
 res.json(products);
 });
-db.exec(`
-CREATE TABLE IF NOT EXISTS sellers (
-id INTEGER PRIMARY KEY AUTOINCREMENT,
-stripe_account_id TEXT UNIQUE,
-email TEXT UNUQUE
-);`);
-app.post('/api/products', (req,res)=>{
+db.query(`CREATE TABLE IF NOT EXISTS sellers (id SERIAL PRIMARY KEY, stripe_account_id TEXT UNIQUE, email TEXT UNIQUE,)`);
+app.post('/api/products', async (req,res)=>{
 const p = req.body
-const stmt = db.prepare('INSERT INTO products (name, price, seller, stock) VALUES (?,?,?,)');
-const r = stmt.run(p.name, p.price, p.seller, p.stock || 0);
-res.status(201).json({id:r.lastInsertRowid});
+const r = await db.query('INSERT INTO products (name, price,seller, stock) VALUES ($1, $2, $3, $4) RETURNING id',[p.name, p.price, p.seller, p.stock || 0]); 
+ const newID = r.rows[0].id;
+res.status(201).json({id:newId});
 });
 app.post('/api/checkout',async (req,res)=>{
 const cart=req.body.cart;
@@ -87,14 +82,15 @@ app.post('/api/connect/create-account',async (req,res)=>{
 const email = String(req.body.email ||
  '').trim().toLowerCase();
  if (!email) return res.status(400).json({error:'Email is required'});
- const existingSeller = db.prepare('SELECT * FROM sellers WHERE email = ?').get(email);
+ const sellerResult = await db.query('SELECT * FROM sellers WHERE amail = $1', [email]); 
+ const existingSeller = sellerResult.rows[0];
  const account = existingSeller &&
   existingSeller.stripe_account_id ? {id:
    existingSeller.stripe_account_id} : await
  stripe.accounts.create({type:'express'});
 
-if (existingSeller) db.prepare("UPDATE sellers SET stripe_account_id = ? WHERE email = ?").run(account.id, email);
-else db.prepare("INSERT INTO sellers (stripe_account_id, email) VALUES (?, ?)").run(account.id, email);                             
+if (existingSeller) await db.query('UPDATE sellers SET stripe_account_id = $1 WHERE email = $2', [account.id, email]);
+else await db.query('INSERT INTO sellers (stripe_account_id, email) VALUES ($1, $2)', [account.id, email]);                             
  const link = await stripe.accountLinks.create({
 account: account.id,
 refresh_url: 'https://jexali.onrender.com',
@@ -104,7 +100,7 @@ type: 'account_onboarding',
 res.json({url: link.url, accountId: account.id});
 });
 
-app.listen(3000, ()=>{
+app.listen(process.env.PORT || 3000, ()=>{
 console.log('Jexali API running on port 3000');
 });
 
