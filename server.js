@@ -93,12 +93,8 @@ const email = String(req.body.email ||
    existingSeller.stripe_account_id} : await
  stripe.accounts.create({type:'express'});
 
-if (existingSeller) db.prepare('UPDATE
-sellers SET stripe_account_id = ? WHERE
- email = ?').run(account.id, email);
- else db.prepare('INSERT INTO sellers
- (sripe_account_id, email) VALUES
- (?, ?)').run(account.id, email);
+if (existingSeller) db.prepare('UPDATE sellers SET stripe_account_id = ? WHERE email = ?").run(account.id, email)
+else db.prepare("INSERT INTO sellers (stripe_account_id, email) VALUES (?, ?)").run(account.id, email);                           ;  
  const link = await stripe.accountLinks.create({
 account: account.id,
 refresh_url: 'https://jexali.onrender.com',
