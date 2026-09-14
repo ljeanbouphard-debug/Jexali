@@ -122,8 +122,12 @@ const connectStripeBtn=document.getElementById("connectStripeBtn");
 if(savedStripeId) connectStripeBtn.textContent="Stripe Connected";
 
 connectStripeBtn.addEventListener("click",async()=>{
-const res=await fetch("/api/connect/create-account",
-{method:"POST"});
+const email = prompt("ENTER your seller email:");
+  if (!email) return;
+  const res=await fetch("/api/connect/create-account",
+{method:"POST",headers:
+{"Content-Type":"application/
+json"},body:JSON.stringify({email})});
 const data=await res.json();
 localStorage.setItem("jexaliStripeAccountId",data.accountId);
 window.location.href=data.url;
