@@ -125,9 +125,7 @@ connectStripeBtn.addEventListener("click",async()=>{
 const email = prompt("ENTER your seller email:");
   if (!email) return;
   const res=await fetch("/api/connect/create-account",
-{method:"POST",headers:
-{"Content-Type":"application/
-json"},body:JSON.stringify({email})});
+{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email})});
 const data=await res.json();
 localStorage.setItem("jexaliStripeAccountId",data.accountId);
 window.location.href=data.url;
