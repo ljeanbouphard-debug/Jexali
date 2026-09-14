@@ -77,6 +77,9 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
           price:price,
         seller:sellerStripeId,
         stock:0
+        category: category,
+        image: image,
+        description: desc
       })
   });
   customProducts.unshift(p);
