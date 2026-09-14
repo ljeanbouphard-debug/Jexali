@@ -28,7 +28,7 @@ app.get('/api/products', async (req,res)=>{
 const products = (await db.query('SELECT * FROM products')).rows;
 res.json(products);
 });
-db.query(`CREATE TABLE IF NOT EXISTS sellers (id SERIAL PRIMARY KEY, stripe_account_id TEXT UNIQUE, email TEXT UNIQUE,)`);
+db.query(`CREATE TABLE IF NOT EXISTS sellers (id SERIAL PRIMARY KEY, stripe_account_id TEXT UNIQUE, email TEXT UNIQUE)`);
 app.post('/api/products', async (req,res)=>{
 const p = req.body
 const r = await db.query('INSERT INTO products (name, price,seller, stock) VALUES ($1, $2, $3, $4) RETURNING id',[p.name, p.price, p.seller, p.stock || 0]); 
