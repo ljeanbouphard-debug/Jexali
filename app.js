@@ -110,7 +110,7 @@ headers:{ 'Content-Type' :'application/json'},
 body:JSON.stringify({cart})
 })
 .then(res=>res.json())
-.then(data=>window.location.href=data.url);
+.then(data=>{if(data.error) {alert(data.error);return;} window.location.href=data.url;});
 });
 
 updateCartCount();
