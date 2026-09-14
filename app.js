@@ -4,7 +4,7 @@ const seedProducts=[
 {id:"seed3",name:"Travel Backpack",price:44.50,category:"Fashion",desc:"Simple backpack for daily use.",image:""}
 ];
 
-let customProducts=JSON.parse(localStorage.getItem("jexaliProducts")||"[]");
+let customProducts=[];
 
 let cart=JSON.parse(localStorage.getItem("jexaliCart")||"[]");
 let sales=Number(localStorage.getItem("jexaliSales")||0);
@@ -12,6 +12,12 @@ let sellerRevenue=Number(localStorage.getItem("jexaliSellerRevenue")||0);
 let jexaliRevenue=Number(localStorage.getItem("jexaliRevenue")||0);
 
 const allProducts=()=>[...seedProducts,...customProducts];
+fetch('/api/products')
+.then(res(=>res.json())
+.then(products=>{
+  customProducts=products;
+  renderShop()
+});
 const money=n=>"$"+Number(n).toFixed(2);
 
 function go(view){
