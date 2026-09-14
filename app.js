@@ -5,6 +5,7 @@ const seedProducts=[
 ];
 
 let customProducts=JSON.parse(localStorage.getItem("jexaliProducts")||"[]");
+
 let cart=JSON.parse(localStorage.getItem("jexaliCart")||"[]");
 let sales=Number(localStorage.getItem("jexaliSales")||0);
 let sellerRevenue=Number(localStorage.getItem("jexaliSellerRevenue")||0);
@@ -57,13 +58,15 @@ function updateCartCount(){document.getElementById("cartCount").textContent=cart
 
 document.getElementById("productForm").addEventListener("submit",e=>{
   e.preventDefault();
+  const sellerStripeId=localStorage.getItem("jexaliStripeAccountId");
+  if(!sellerStripeId){alert("Please connect your Stripe account before publishing a product.");return;}
   const name=document.getElementById("pName").value.trim();
   const price=Number(document.getElementById("pPrice").value);
   const category=document.getElementById("pCategory").value;
   const image=document.getElementById("pImage").value.trim();
   const desc=document.getElementById("pDesc").value.trim();
   if(!name || !desc || !(price>0)){document.getElementById("formMsg").textContent="Please complete all required fields.";return;}
-  const sellerStripeId=localStorage.getItem("jexaliStripeAccountId");
+  
   const p={id:"p"+Date.now(),name,price,category,image,desc,seller:sellerStripeId};
   customProducts.unshift(p);
   localStorage.setItem("jexaliProducts",JSON.stringify(customProducts));
