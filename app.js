@@ -13,7 +13,7 @@ let jexaliRevenue=Number(localStorage.getItem("jexaliRevenue")||0);
 
 const allProducts=()=>[...seedProducts,...customProducts];
 fetch('/api/products')
-.then(res(=>res.json())
+.then(res=>res.json())
 .then(products=>{
   customProducts=products;
   
