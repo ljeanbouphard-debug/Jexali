@@ -49,6 +49,7 @@ cart.length===0)
  const hasSeller=cart.some(item=>item.seller);
  const allSameSeller=hasSeller&&cart.every(item=>
   item.seller===cart[0].seller);
+ if(hasSeller&&!allSameSeller)return res.status(400).json({error:"Please checkout products from one seller at a time."});
  const sellerStripeId=allSameSeller?
   cart[0].seller:null;
 const session = await stripe.checkout.sessions.create({
