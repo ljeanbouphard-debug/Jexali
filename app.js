@@ -56,7 +56,7 @@ function addToCart(id){
 
 function updateCartCount(){document.getElementById("cartCount").textContent=cart.length;}
 
-document.getElementById("productForm").addEventListener("submit",e=>{
+document.getElementById("productForm").addEventListener("submit",async e=>{
   e.preventDefault();
   const sellerStripeId=localStorage.getItem("jexaliStripeAccountId");
   if(!sellerStripeId){alert("Please connect your Stripe account before publishing a product.");return;}
@@ -68,6 +68,17 @@ document.getElementById("productForm").addEventListener("submit",e=>{
   if(!name || !desc || !(price>0)){document.getElementById("formMsg").textContent="Please complete all required fields.";return;}
   
   const p={id:"p"+Date.now(),name,price,category,image,desc,seller:sellerStripeId};
+  await fetch('/api/products',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    
+      body:JSON.stringify({
+        name:name,
+          price:price,
+        seller:sellerStripeId,
+        stock:0
+      })
+  });
   customProducts.unshift(p);
   localStorage.setItem("jexaliProducts",JSON.stringify(customProducts));
   e.target.reset();
