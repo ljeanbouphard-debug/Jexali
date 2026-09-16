@@ -55,6 +55,7 @@ console.log("DB PRODUCTS FOUND:",dbProducts.length, dbProducts);
 const sellerIds = dbProducts.map(product => product.seller_id);
  const allSameSellerId = sellerIds.every(id => id === sellerIds[0]);
 if (!allSameSellerId || !sellerIds[0]) return res.status(400).json({error:'Products must belong to one valid seller'});
+ console.log("SELLER IDS CHECK:", sellerIds, allSameSellerId);
 const sellerResult = await db.query('SELECT stripe_account_id FROM sellers WHERE id = $1', [sellerIds[0]]);
 if (sellerResult.rows.length === 0) return res.status(400).json({error:'Seller not found'});
 const sellerStripeId = sellerResult.rows[0].stripe_account_id;
