@@ -58,7 +58,7 @@ if (!allSameSellerId || !sellerIds[0]) return res.status(400).json({error:'Produ
 const sellerResult = await db.query('SELECT stripe_account_id FROM sellers WHERE id = $1', [sellerIds[0]]);
 if (sellerResult.rows.length === 0) return res.status(400).json({error:'Seller not found'});
 const sellerStripeId = sellerResult.rows[0].stripe_account_id;
- 
+ console.log("CHECKOUT SELLER FOUND:", !! sellerStripeId);
 const session = await stripe.checkout.sessions.create({
 mode:'payment',
 branding_settings: { display_name:' Jexali ' },
