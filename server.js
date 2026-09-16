@@ -46,7 +46,7 @@ cart.length===0)
  const productIds = cart.map(item => item.id);
  const quantities = cart.map(item => Number(item.quantity || 1));
  if (quantities.some(q => ! Number.isInteger(q) || q < 1 || q > 99)) return res.status(400).json({error:'Invalid quantity'});
- const dbProduct = (await db.query('SELECT * FROM products WHERE id = ANY($1::int[])',[products])).rows; if (dbProducts.lentgh !== productsIds.length) return res.status(400).json({error:'Invalid product in cart'});
+ const dbProduct = (await db.query('SELECT * FROM products WHERE id = ANY($1::int[])',[productIds])).rows; if (dbProducts.lentgh !== productsIds.length) return res.status(400).json({error:'Invalid product in cart'});
 const allSameSellerId = sellerIds.every(id => id === sellerIds[0]);
 if (!allSameSellerId || !sellerIds[0]) return res.status(400).json({error:'Products must belong to one valid seller'});
 const sellerResult = await db.query('SELECT stripe_account_id FROM sellers WHERE id = $1', [sellerIds[0]]);
