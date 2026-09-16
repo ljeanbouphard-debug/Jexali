@@ -30,6 +30,7 @@ const products = (await db.query('SELECT * FROM products')).rows;
 res.json(products);
 });
 db.query(`CREATE TABLE IF NOT EXISTS sellers (id SERIAL PRIMARY KEY, stripe_account_id TEXT UNIQUE, email TEXT UNIQUE)`);
+app.get('/api/debug-sellers', async (req,res)=>{ const sellers = (await db.query('SELECT id, stripe_account_id, email FROM sellers')).rows; res.json(sellers);});
 db.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS seller_id INTEGER");
 app.post('/api/products', async (req,res)=>{
 const p = req.body
