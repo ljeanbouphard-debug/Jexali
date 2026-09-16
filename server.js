@@ -43,16 +43,22 @@ const cart=req.body.cart;
  if(!Array.isArray(cart)||
 cart.length===0)
  return res.status(400).json({error:'Cart is empty'});
- const hasSeller=cart.some(item=>item.seller);
- const allSameSeller=hasSeller&&cart.every(item=>
-  item.seller===cart[0].seller);
- if(hasSeller&&!allSameSeller)return res.status(400).json({error:"Please checkout products from one seller at a time."});
- const sellerStripeId=allSameSeller?
-  cart[0].seller:null;
+ const productIds = cart.map(item => item.id);
+ const quantities = cart.map(item => Number(item.quantity || 1));
+ if (quantities.some(q => ! Number.isInteger(q) || q < 1 || q > 99)) return res.status(400).json({error:'Invalid quantity'});
+ const dbProducts = (await db.query('SELECT * FROM products WHERE id = ANY($1::int[])', [productsIds])).rows;
+ if (dbProducts.length !== productIds.length) return res.status(400).json(error:'Invalid product in cart'});
+const sellerIds = dbProducts.map(product => product.seller_id);
+const allSameSellerId = sellerIds.every(id => id === sellerIds[0]);
+if (!allSameSellerId || !sellerIds[0]) return res.status(400).json({error:'Products must belong to one valid seller'});
+const sellerResult = await db.query('SELECT stripe_account_id FROM sellers WHERE id = $1', [sellerIds[0]]);
+if (sellerResult.rows.length === 0) return res.status(400).json({error:'Seller not found'});
+const sellerStripeId = sellerResult.rows[0].stripe_account_id;
+ 
 const session = await stripe.checkout.sessions.create({
 mode:'payment',
 branding_settings: { display_name:' Jexali ' },
-line_items: cart.map(item=>({
+line_items: dbProducts.map(item=>({
 price_data:{
 currency:'usd',
 product_data:{
@@ -60,12 +66,12 @@ name:item.name,
 },
 unit_amount:Math.round(item.price*100),
 },
-quantity:item.quantity||1,
+quantity:(cart.find(c => c.id === item.id)?.quantity || 1),
 })),
 ...(sellerStripeId ? {payment_intent_data:
-{application_fee_amount: Math.round(cart.reduce((sum, item)=>
+{application_fee_amount: Math.round(dbProducts.reduce((sum, item)=>
  sum + Math.round(item.price * 100)
- * (item.quantity || 1), 0
+ * (cart.find(c => c.id === item.id)?.quantity || 1), 0
         ) * 0.10
        ),
  transfer_data: {
