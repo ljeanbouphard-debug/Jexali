@@ -30,9 +30,10 @@ const products = (await db.query('SELECT * FROM products')).rows;
 res.json(products);
 });
 db.query(`CREATE TABLE IF NOT EXISTS sellers (id SERIAL PRIMARY KEY, stripe_account_id TEXT UNIQUE, email TEXT UNIQUE)`);
+db.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS seller_id INTEGER");
 app.post('/api/products', async (req,res)=>{
 const p = req.body
-const r = await db.query('INSERT INTO products (name, price,seller, stock, category, image, description) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id', [p.name, p.price, p.seller, p.stock || 0, p.category, p.image, p.description]);
+const r = await db.query('INSERT INTO products (name, price,seller, seller_id, stock, category, image, description) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id', [p.name, p.price, p.seller, p.seller_id, p.stock || 0, p.category, p.image, p.description]);
  const newID = r.rows[0].id;
 res.status(201).json({id:newId});
 });
