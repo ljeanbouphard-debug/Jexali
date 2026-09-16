@@ -53,7 +53,7 @@ function renderShop(){
 document.getElementById("searchInput").addEventListener("input",renderShop);
 
 function addToCart(id){
-  const p=allProducts().find(x=>x.id===id);
+  cont p=allProducts().find(x=>String(x.id)===String(id));
   if(!p) return;
   cart.push({...p,cartId:Date.now()+Math.random()});
   localStorage.setItem("jexaliCart",JSON.stringify(cart));
