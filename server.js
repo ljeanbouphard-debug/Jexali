@@ -93,7 +93,7 @@ app.post('/api/connect/create-account',async (req,res)=>{
 const email = String(req.body.email ||
  '').trim().toLowerCase();
  if (!email) return res.status(400).json({error:'Email is required'});
- const sellerResult = await db.query('SELECT * FROM sellers WHERE amail = $1', [email]); 
+ const sellerResult = await db.query('SELECT * FROM sellers WHERE email = $1', [email]); 
  const existingSeller = sellerResult.rows[0];
  const account = existingSeller &&
   existingSeller.stripe_account_id ? {id:
