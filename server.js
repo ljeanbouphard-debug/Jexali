@@ -50,7 +50,8 @@ cart.length===0)
  const dbProducts = (await db.query('SELECT * FROM products WHERE id = ANY($1::int[])',[productIds])).rows;
 console.log("DB PRODUCTS FOUND:",dbProducts.length, dbProducts);
  if (dbProducts.lentgh !== productIds.length) return res.status(400).json({error:'Invalid product in cart'});
-const allSameSellerId = sellerIds.every(id => id === sellerIds[0]);
+const sellerIds = dbProducts.map(product => product.seller_id);
+ const allSameSellerId = sellerIds.every(id => id === sellerIds[0]);
 if (!allSameSellerId || !sellerIds[0]) return res.status(400).json({error:'Products must belong to one valid seller'});
 const sellerResult = await db.query('SELECT stripe_account_id FROM sellers WHERE id = $1', [sellerIds[0]]);
 if (sellerResult.rows.length === 0) return res.status(400).json({error:'Seller not found'});
