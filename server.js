@@ -51,6 +51,7 @@ cart.length===0)
  if (quantities.some(q => ! Number.isInteger(q) || q < 1 || q > 99)) return res.status(400).json({error:'Invalid quantity'});
  const dbProducts = (await db.query('SELECT * FROM products WHERE id = ANY($1::int[])',[productIds])).rows;
 console.log("DB PRODUCTS FOUND:",dbProducts.length, dbProducts);
+console.log("CHECKOUT LENGTHS:", dbProducts.length, productIds.length);
  if (dbProducts.lentgh !== productIds.length) return res.status(400).json({error:'Invalid product in cart'});
 const sellerIds = dbProducts.map(product => product.seller_id);
  const allSameSellerId = sellerIds.every(id => id === sellerIds[0]);
