@@ -34,7 +34,8 @@ app.get('/api/debug-sellers', async (req,res)=>{ const sellers = (await db.query
 db.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS seller_id INTEGER");
 app.post('/api/products', async (req,res)=>{
 const p = req.body
-const r = await db.query('INSERT INTO products (name, price,seller, seller_id, stock, category, image, description) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id', [p.name, p.price, p.seller, p.seller_id, p.stock || 0, p.category, p.image, p.description]);
+const sellerRow = (await db.query('SELECT id FROM sellers WHERE stripe_account_id = $1', [p.seller])).rows[0];
+ const r = await db.query('INSERT INTO products (name, price,seller, seller_id, stock, category, image, description) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id', [p.name, p.price, p.seller, sellerRow?.id, p.stock || 0, p.category, p.image, p.description]);
  const newID = r.rows[0].id;
 res.status(201).json({id:newId});
 });
