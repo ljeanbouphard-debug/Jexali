@@ -74,7 +74,7 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
   if(!name || !desc || !(price>0)){document.getElementById("formMsg").textContent="Please complete all required fields.";return;}
   
   const p={id:"p"+Date.now(),name,price,category,image,desc,seller:sellerStripeId};
-  await fetch('/api/products',{
+  const response=await fetch("/api/products",{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     
@@ -88,6 +88,7 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
         description: desc
       })
   });
+ const data=await response.json();p.id=data.id; 
   customProducts.unshift(p);
   localStorage.setItem("jexaliProducts",JSON.stringify(customProducts));
   e.target.reset();
