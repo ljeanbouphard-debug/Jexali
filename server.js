@@ -46,21 +46,21 @@ const cart=req.body.cart;
 cart.length===0)
  return res.status(400).json({error:'Cart is empty'});
  const productIds = cart.map(item => item.id);
- console.log("CHECKOUT PRODUCT IDS:", productIds);
+ 
  const quantities = cart.map(item => Number(item.quantity || 1));
  if (quantities.some(q => ! Number.isInteger(q) || q < 1 || q > 99)) return res.status(400).json({error:'Invalid quantity'});
  const dbProducts = (await db.query('SELECT * FROM products WHERE id = ANY($1::int[])',[productIds])).rows;
-console.log("DB PRODUCTS FOUND:",dbProducts.length, dbProducts);
-console.log("CHECKOUT LENGTHS:", dbProducts.length, productIds.length);
+
+
  if (dbProducts.length !== productIds.length) { return res.status(400).json({eror:'Invalid product in cart'});}
 const sellerIds = dbProducts.map(product => product.seller_id);
  const allSameSellerId = sellerIds.every(id => id === sellerIds[0]);
 if (!allSameSellerId || !sellerIds[0]) return res.status(400).json({error:'Products must belong to one valid seller'});
- console.log("SELLER IDS CHECK:", sellerIds, allSameSellerId);
+ 
 const sellerResult = await db.query('SELECT stripe_account_id FROM sellers WHERE id = $1', [sellerIds[0]]);
 if (sellerResult.rows.length === 0) return res.status(400).json({error:'Seller not found'});
 const sellerStripeId = sellerResult.rows[0].stripe_account_id;
- console.log("CHECKOUT SELLER FOUND:", !! sellerStripeId);
+ 
 const session = await stripe.checkout.sessions.create({
 mode:'payment',
 branding_settings: { display_name:' Jexali ' },
