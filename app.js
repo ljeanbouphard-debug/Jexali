@@ -101,7 +101,7 @@ function renderDashboard(){
   document.getElementById("earnings").textContent=money(sellerRevenue);
   document.getElementById("jexaliFees").textContent=money(jexaliRevenue);
   document.getElementById("sellerListings").innerHTML=customProducts.length?customProducts.map(p=>cardHTML(p,true)).join(""):"<p>You have not posted any products yet.</p>";
-  document.querySelectorAll(".remove-product").forEach(b=>b.addEventListener("click",a sync ()=>{ const id=b.dataset.id; const response=await fetch(`/api/products/${id}`,{method:"DELETE"}); if(!response.ok){alert("Could not remove listing"); return;} customProducts=customProducts.filter(p=>String(p.id)!==String(id)); localStorage.setItem("jexaliProducts",JSON.stringify(customProducts)); await loadProducts(); renderDashboard(); }));
+ document.querySelectorAll(".remove-product").forEach(b=>b.addEventListener("click",a sync()=>{const id=b.dataset.id;const response=await fetch("/api/products/"+id,{method:"DELETE"});if(!response.ok){alert("Could not remove listing");return;} customProducts=customProducts.filter(p=>String(p.id)!==String(id));localStorage.setItem("jexaliProducts",JSON.stringify(customProducts));await loadProducts();renderDashboard();})); 
 }
 
 function renderCart(){
