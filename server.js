@@ -32,7 +32,7 @@ res.json(products);
 db.query(`CREATE TABLE IF NOT EXISTS sellers (id SERIAL PRIMARY KEY, stripe_account_id TEXT UNIQUE, email TEXT UNIQUE)`);
 app.get('/api/debug-sellers', async (req,res)=>{ const sellers = (await db.query('SELECT id, stripe_account_id, email FROM sellers')).rows; res.json(sellers);});
 app.get('/api/debug-null-products', async(req,res)=>{ const products = (await db.query('SELECT id, name, seller, seller_id FROM products WHERE seller_id IS NULL')).rows; res.json(products); });
-db.query('UPDATE products p SET seller_id = s.id FROM sellers s WHERE p.seller_id IS NULL AND p.sellers = s.stripe_account_id');
+db.query(`UPDATE products  SET seller_id = sellers.id FROM sellers WHERE products.seller_id IS NULL AND products.sellers = sellers.stripe_account_id`);
 db.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS seller_id INTEGER");
 app.post('/api/products', async (req,res)=>{
 const p = req.body
