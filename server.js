@@ -40,7 +40,7 @@ const p = req.body
 const sellerRow = (await db.query('SELECT id FROM sellers WHERE stripe_account_id = $1', [p.seller])).rows[0];
  const r = await db.query('INSERT INTO products (name, price,seller, seller_id, stock, category, image, description) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id', [p.name, p.price, p.seller, sellerRow?.id, p.stock || 0, p.category, p.image, p.description]);
  const newID = r.rows[0].id;
-res.status(201).json({id:newId});
+res.status(201).json({id:newID});
 });
 app.delete('/api/products/:id', async (req,res)=>{const id = Number(req.params.id);if (!Number.isInteger(id)) return res.status(400).json({error:'Invalid product id'}); const result = await db.query('DELETE FROM products WHERE id = $1 RETURNING id', [id]); if (result.rows.length === 0) return res.status(404).json({error:'Product not foud'}); res.json({ok:true,id:result.rows[0].id}); });
 app.post('/api/checkout',async (req,res)=>{
