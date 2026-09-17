@@ -86,8 +86,8 @@ quantity:(cart.find(c => c.id === item.id)?.quantity || 1),
 }
                      } : {}),
                                                                            
-success_url:'http://localhost:8000/?success=1&session_id={CHECKOUT_SESSION_ID}',
-cancel_url:'http://localhost:8000/?canceled=1',
+success_url:'https://jexali.onrender.com/?success=1& session_id={CHECKOUT_SESSION_ID}',
+cancel_url:'https://jexali.onrender.com/?canceled=1',
 });
  
 res.json({url:session.url});
