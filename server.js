@@ -122,7 +122,7 @@ app.get('/api/seller/stats', async (req,res)=>{
   [sellerId]
   );
  const stats = result.rows[0];
- res.json({sales:stats.sales, sellerEarnings:Number(stats.seller_earnings); jexaliFees:Number(stats.jexali_fees)});
+ res.json({sales:stats.sales, sellerEarnings:Number(stats.seller_earnings), jexaliFees:Number(stats.jexali_fees)});
 });
 app.post('/api/connect/create-account',async (req,res)=>{
 const email = String(req.body.email ||
