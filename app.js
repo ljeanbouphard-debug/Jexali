@@ -97,10 +97,19 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
 });
 
 function renderDashboard(){
+ const stripeAccountId=localStorage.getItem("jexaliStripeAccountId"); 
+  if(stripeAccountId) fetch("/api/seller/stats? stripe_account_id="+encodeURIComponent(stripeAccountId))
+  .then(res=>res.json())
+  .then(data=>{
+    if(data.error)return;
+    document.getElementById("salesCount").textContent=data.sales;
+    document.getElementById("earnings").textContent=money(data.sellerEarnings);
+    document.getElementById("jexaliFees").textContent=money(data.jexaliFees);
+  });
   document.getElementById("listingCount").textContent=customProducts.length;
-  document.getElementById("salesCount").textContent=sales;
-  document.getElementById("earnings").textContent=money(sellerRevenue);
-  document.getElementById("jexaliFees").textContent=money(jexaliRevenue);
+  document.getElementById("salesCount").stripeAccountId ? "..." : sales;
+  document.getElementById("earnings").textContent=stripeAccountId ? "..." : money(sellerRevenue)
+  document.getElementById("jexaliFees").textContent=stripeAccount ? "..." : money(jexaliRevenue)
   document.getElementById("sellerListings").innerHTML=customProducts.length?customProducts.map(p=>cardHTML(p,true)).join(""):"<p>You have not posted any products yet.</p>";
  document.querySelectorAll(".remove-product").forEach(b=>b.addEventListener("click",async()=>{const id=String(b.dataset.id).replace(/^p/,"");const response=await fetch("/api/products/"+id,{method:"DELETE"});if(!response.ok){alert("Could not remove listing");return;} customProducts=customProducts.filter(p=>String(p.id)!==String(id));localStorage.setItem("jexaliProducts",JSON.stringify(customProducts));renderDashboard();})); 
 }
