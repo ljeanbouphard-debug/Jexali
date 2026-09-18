@@ -115,8 +115,11 @@ await db.query(
  res.json({ok:true, sales:1, sellerEarning, jexaliFee});
 });
 app.get('/api/seller/stats', async (req,res)=>{
- const sellerId = Number(req.query.seller_id);
- if (!Number.isInteger(sellerId)) return res.status(400).json({error:'Invalid seller'});
+ const stripeAccountId = String(req.query.stripe_account_id || '');
+ if (!stripeAccountId) return res.status(400).json({error:'Invalid seller'});
+ const sellerRow = (await db.query('SELECT id FROM sellers WHERE stripe_account_id = $1',[stripeAccount])).rows[0];
+ if (!sellerRow) return res.status(404).json({error:'Seller not found'});
+ const sellerId = Number(sellerRow.id);
  const result = await db.query(
   'SELECT COUNT(*)::int AS sales, COALESCE(SUM(seller_earnings),0) AS seller_earnings, COALESCE(SUM(jexali_fee),0) AS jexali_fees FROM orders WHERE seller_id = $1',
   [sellerId]
