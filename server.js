@@ -114,6 +114,16 @@ await db.query(
  );
  res.json({ok:true, sales:1, sellerEarning, jexaliFee});
 });
+app.get('/api/seller/stats', async (req,res)=>{
+ const sellerId = Number(req.query.seller_id);
+ if (!Number.isInteger(sellerId)) return res.status(400).json({error:'Invalid seller'});
+ const result = await db.query(
+  'SELECT COUNT(*)::int AS sales, COALESCE(SUM(seller_earnings),0) AS seller_earnings, COALESCE(SUM(jexali_fee),0) AS jexali_fees FROM orders WHERE seller_id = $1',
+  [sellerId]
+  );
+ const stats = result.rows[0];
+ res.json({sales:stats.sales, sellerEarnings:Number(stats.seller_earnings); jexaliFees:Number(stats.jexali_fees)});
+});
 app.post('/api/connect/create-account',async (req,res)=>{
 const email = String(req.body.email ||
  '').trim().toLowerCase();
