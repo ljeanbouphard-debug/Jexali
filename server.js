@@ -117,7 +117,7 @@ await db.query(
 app.get('/api/seller/stats', async (req,res)=>{
  const stripeAccountId = String(req.query.stripe_account_id || '');
  if (!stripeAccountId) return res.status(400).json({error:'Invalid seller'});
- const sellerRow = (await db.query('SELECT id FROM sellers WHERE stripe_account_id = $1',[stripeAccount])).rows[0];
+ const sellerRow = (await db.query('SELECT id FROM sellers WHERE stripe_account_id = $1',[stripeAccountId])).rows[0];
  if (!sellerRow) return res.status(404).json({error:'Seller not found'});
  const sellerId = Number(sellerRow.id);
  const result = await db.query(
