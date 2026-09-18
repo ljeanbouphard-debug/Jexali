@@ -68,6 +68,7 @@ const sellerStripeId = sellerResult.rows[0].stripe_account_id;
  
 const session = await stripe.checkout.sessions.create({
 mode:'payment',
+ metadata: { seller_id: String(sellerIds[0]) },
 branding_settings: { display_name:' Jexali ' },
 line_items: dbProducts.map(item=>({
 price_data:{
