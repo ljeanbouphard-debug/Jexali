@@ -98,6 +98,22 @@ cancel_url:'https://jexali.onrender.com/?canceled=1',
  
 res.json({url:session.url});
 });
+app.get('/api/checkout/verify', async (req,res)=>{
+ const sessionId = String(req.query.session_id || '');
+ if (!sessionId) return res.status(400).json({error:'Missing session id'});
+ const session = await stripe.checkout.sessions.retrieve(sessionId);
+ if (sessions.payment_status !== 'paid') return res.status(400).json({error:'Payment not completed'});
+ const sellerId = Number(session.metadata?.seller_id);
+ if (!Number.isInteger(sellerId)) return res.status(400).json({error:'Invalid seller'});
+ const amount = Number(session.amount_total || 0) / 100;
+ const jexaliFee = amount * 0.10;
+ const sellerEarnings = amount - jexaliFee;
+await db.query( 
+ 'INSERT INTO orders (stripe_session_id, seller_id, amount, seller_earnings, jexali_fee) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (stripe_session_id) DO NOTHING',
+ [session.id, sellerId, amount, sellerEarnings, jexaliFee]
+ );
+ res.json({ok:true, sales:1, sellerEarning, jexaliFee});
+});
 app.post('/api/connect/create-account',async (req,res)=>{
 const email = String(req.body.email ||
  '').trim().toLowerCase();
