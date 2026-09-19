@@ -3,6 +3,7 @@ const { Pool } = require('pg');
 const cors = require('cors')
 const express = require('express');
 const stripe = require('stripe') (process.env.STRIPE_SECRET_KEY);
+const stripeTest = require('stripe') (process.env.STRIPE_TEST_SECRET_KEY);
 
 const db = new Pool({connectionString: process.env.DATABASE_URL });
 const app = express();
@@ -16,7 +17,7 @@ app.get('/api/key-length', (req, res) => {
   O });
 });
 app.get('/api/stripe-test', async (req,res) => {
- try { const account = await stripe.accounts.retrieve();
+ try { const account = await stripeTest.accounts.retrieve();
       res.json({ ok: true, id: account.id });
      } catch (err) {
   res.status(500).json({ ok: false,
