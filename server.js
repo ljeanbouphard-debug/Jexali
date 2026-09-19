@@ -8,6 +8,7 @@ const stripeTest = require('stripe') (process.env.STRIPE_TEST_SECRET_KEY);
 
 const db = new Pool({connectionString: process.env.DATABASE_URL });
 const app = express();
+app.set('trust proxy', 1);
 app.use(cors());
 app.use(express.json());
 app.use(session({secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false, cookie: {httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax"}}));
