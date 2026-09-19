@@ -98,7 +98,7 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
 
 function renderDashboard(){
  const stripeAccountId=localStorage.getItem("jexaliStripeAccountId"); 
- if(stripeAccountId) fetch("/api/seller/stats?stripe_account_id="+encodeURIComponent(stripeAccountId))
+ if(stripeAccountId) fetch('/api/seller/stats')
   .then(res=>res.json())
   .then(data=>{
     if(data.error)return;
