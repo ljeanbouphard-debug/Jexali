@@ -142,6 +142,7 @@ const email = String(req.body.email ||
 if (existingSeller) await db.query('UPDATE sellers SET stripe_account_id = $1 WHERE email = $2', [account.id, email]);
 else await db.query('INSERT INTO sellers (stripe_account_id, email) VALUES ($1, $2)', [account.id, email]); 
 req.session.sellerId = existingSeller ? existingSeller.id : (await db.query('SELECT id FROM sellers WHERE email = $1', [email])).rows[0].id; 
+await new Promise((resolve, reject) => req.session.save(err => err ? reject(err) : resolve()));
  const link = await stripe.accountLinks.create({
 account: account.id,
 refresh_url: 'https://jexali.onrender.com',
