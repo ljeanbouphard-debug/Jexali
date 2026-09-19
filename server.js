@@ -2,6 +2,7 @@ require('dotenv').config();
 const { Pool } = require('pg');
 const cors = require('cors')
 const express = require('express');
+const session = require("express-session");
 const stripe = require('stripe') (process.env.STRIPE_SECRET_KEY);
 const stripeTest = require('stripe') (process.env.STRIPE_TEST_SECRET_KEY);
 
@@ -9,6 +10,7 @@ const db = new Pool({connectionString: process.env.DATABASE_URL });
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(session({secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false, cookie: {httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax"}}));
 app.use(express.static(__dirname));
 app.get('/api/key-length', (req, res) => {
  res.json({ length:
@@ -118,11 +120,7 @@ await db.query(
  res.json({ok:true, sales:1, sellerEarning, jexaliFee});
 });
 app.get('/api/seller/stats', async (req,res)=>{
- const stripeAccountId = String(req.query.stripe_account_id || '');
- if (!stripeAccountId) return res.status(400).json({error:'Invalid seller'});
- const sellerRow = (await db.query('SELECT id FROM sellers WHERE stripe_account_id = $1',[stripeAccountId])).rows[0];
- if (!sellerRow) return res.status(404).json({error:'Seller not found'});
- const sellerId = Number(sellerRow.id);
+if (!req.session.sellerId) return res.status(401).json({error:'Not signed in'}); const sellerId = Number(req.session.sellerId); 
  const result = await db.query(
   'SELECT COUNT(*)::int AS sales, COALESCE(SUM(seller_earnings),0) AS seller_earnings, COALESCE(SUM(jexali_fee),0) AS jexali_fees FROM orders WHERE seller_id = $1',
   [sellerId]
@@ -142,7 +140,8 @@ const email = String(req.body.email ||
  stripe.accounts.create({type:'express'});
 
 if (existingSeller) await db.query('UPDATE sellers SET stripe_account_id = $1 WHERE email = $2', [account.id, email]);
-else await db.query('INSERT INTO sellers (stripe_account_id, email) VALUES ($1, $2)', [account.id, email]);                             
+else await db.query('INSERT INTO sellers (stripe_account_id, email) VALUES ($1, $2)', [account.id, email]); 
+req.session.sellerId = existingSeller ? existingSeller.id : (await db.query('SELECT id FROM sellers WHERE email = $1', [email])).rows[0].id; 
  const link = await stripe.accountLinks.create({
 account: account.id,
 refresh_url: 'https://jexali.onrender.com',
