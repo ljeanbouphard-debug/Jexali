@@ -16,6 +16,7 @@ app.get('/api/key-length', (req, res) => {
   process.env.STRIPE_SECRET_KEY.length :
   O });
 });
+app.get('/api/test-key-info', (req,res)=> {const key = process.env.STRIPE_TEST_SECRET_KEY || ''; res.json({exists: !!key, length: key.length,startsWithSkTest: key.startsWith('sk_test_'),hasWithespace: /\s/.test(key)});});
 app.get('/api/stripe-test', async (req,res) => {
  try { const account = await stripeTest.accounts.retrieve();
       res.json({ ok: true, id: account.id });
