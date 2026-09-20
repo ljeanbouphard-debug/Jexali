@@ -107,7 +107,7 @@ function renderDashboard(){
     document.getElementById("earnings").textContent=money(data.sellerEarnings);
     document.getElementById("jexaliFees").textContent=money(data.jexaliFees);
   });
-if(stripeAccountId){fetch('/api/seller/products').then(res=>res.json()).then(products=>{if(products.error) return;customProducts=products; document.getElementById("listingCount").textContent=products.length; document.getElementById("sellerListings").innerHTML=products.length? products.map(p=>cardHTML(p,true)).join("") : "<p>No listings yet.</p>";});} 
+if(stripeAccountId){fetch('/api/seller/products').then(res=>res.json()).then(products=>{if(products.error) return;customProducts=products; document.getElementById("listingCount").textContent=products.length; document.getElementById("sellerListings").innerHTML=products.length? products.map(p=>cardHTML(p,true)).join("") : "<p>No listings yet.</p>";}); 
 }
   
   document.getElementById("salesCount").textContent=stripeAccountId ? "..." : sales;
