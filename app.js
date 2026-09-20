@@ -2,6 +2,7 @@ const seedProducts=[
 {id:"seed1",name:"Wireless Headphones",price:39.99,category:"Electronics",desc:"Comfortable everyday wireless headphones.",image:""},
 {id:"seed2",name:"Classic Sneakers",price:54.99,category:"Fashion",desc:"Clean everyday sneakers.",image:""},
 {id:"seed3",name:"Travel Backpack",price:44.50,category:"Fashion",desc:"Simple backpack for daily use.",image:""}
+  
 ];
 
 let customProducts=[];
@@ -106,7 +107,7 @@ function renderDashboard(){
     document.getElementById("earnings").textContent=money(data.sellerEarnings);
     document.getElementById("jexaliFees").textContent=money(data.jexaliFees);
   });
- if(stripeAccountId) fetch('/api/seller/products').then(res=>res.json()).then(products=>{if(products.error)return; customProducts=products; document.getElementById("listingCount").textContent=products.lentgh; document.getElementById("sellerListings").innerHTML=products.length ? products.map(p=>card(p,true)).join("") : "<p>No listings yet.</p>"; }); 
+ if(stripeAccountId) fetch('/api/seller/products').then(res=>res.json()).then(products=>{if(products.error)return; customProducts=products; document.getElementById("listingCount").textContent=products.lentgh; document.getElementById("sellerListings").innerHTML=products.length ? products.map(p=>cardHTML(p,true).join("") : "<p>No listings yet.</p>"; }); 
   
   document.getElementById("salesCount").textContent=stripeAccountId ? "..." : sales;
   document.getElementById("earnings").textContent=stripeAccountId ? "..." : money(sellerRevenue)
