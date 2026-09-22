@@ -45,7 +45,8 @@ db.query("CREATE TABLE IF NOT EXISTS orders (id SERIAL PRIMARY KEY, stripe_sessi
 db.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS seller_id INTEGER");
 app.post('/api/products', async (req,res)=>{
 const p = req.body
-const sellerRow = (await db.query('SELECT id FROM sellers WHERE stripe_account_id = $1', [p.seller])).rows[0];
+ if (!req.session.sellerId) return res.status(401).json({error:'Not signed in'});
+const sellerRow = { id:Number(req.session.sellerId) };
  const r = await db.query('INSERT INTO products (name, price,seller, seller_id, stock, category, image, description) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id', [p.name, p.price, p.seller, sellerRow?.id, p.stock || 0, p.category, p.image, p.description]);
  const newID = r.rows[0].id;
 res.status(201).json({id:newID});
