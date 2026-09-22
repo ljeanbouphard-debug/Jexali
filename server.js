@@ -9,8 +9,8 @@ const stripeTest = require('stripe') (process.env.STRIPE_TEST_SECRET_KEY);
 
 const db = new Pool({connectionString: process.env.DATABASE_URL });
 class PgSessionStore extends session.Store {
-construction(pool) {
-
+constructor(pool) {
+super();
 this.pool = pool; 
 this.pool.query(` 
 CREATE TABLE IF NOT EXISTS user_sessions (
