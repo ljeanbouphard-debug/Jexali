@@ -31,13 +31,7 @@ this.pool.query(
 set(sid, sess, callback) {  
 const maxAge = sess.cookie?.maxAge || 30 * 24 * 60 * 60 * 1000; 
 const expire = new Date(Date.now() + maxAge; 
-this.pool.query(
-`INSERT INTO user_sessions (sid, sess, expire)  
-VALUES ($1, $2, $3)
-ON CONFLICT (sid) DO UPDATE SET sess = EXCLUDED.sess, expire = EXCLUDED.expire`,
-[sid, sess, expire] 
-)  
-.then(() => callback()).catch(callback); 
+this.pool.query('INSERT INTO user_sessions (sid, sess, expire) VALUES ($1, $2, $3) ON CONFLICT (sid) DO UPDATE SET sess = EXCLUDED.sess, expire = EXCLUDED.expire', [sid, sess, expire]).then(() => callback()).catch(callback);
 }  
 destroy(sid, callback) { 
 this.pool.query('DELETE FROM user_sessions WHERE sid = $1', [sid])
