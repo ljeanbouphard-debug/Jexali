@@ -89,7 +89,8 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
         description: desc
       })
   });
- const data=await response.json();p.id=data.id; 
+if (!response.ok) { const err=await response.json(); alert(err.error || "Product could not be saved"); return; }
+  const data=await response.json();p.id=data.id; 
   customProducts.unshift(p);
   localStorage.setItem("jexaliProducts",JSON.stringify(customProducts));
   e.target.reset();
