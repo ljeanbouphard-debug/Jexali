@@ -50,7 +50,27 @@ this.pool.query(
 const app = express();
 app.set('trust proxy', 1);
 app.use(cors());
-app.use(express.json());
+app.post('/api/stripe-webhook',express.raw({type:'application/json'}),async (req,res)=>{
+const sig req.headers['stripe-signature']; 
+let event; 
+try { 
+event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET); 
+} catch (err) { 
+return res.status(400).send(`webhook Error: ${err.message}`); 
+} 
+if (event.type === 'checkout.session.completed') { 
+const session = event.data.object;
+const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {limit:100,expand:['data.price.product']};
+for (const item of lineItems.data) { 
+const productId= Number(item.price.product.metadata.product_id); 
+const quantity = item.quantity || 1;
+if (!Number.isInteger(productId)) continue; 
+await db.query('UPDATE products SET stock = GREATEST(stock - $1, 0) WHERE id = $2', [quantity, productId]); 
+} 
+}
+res.json({received:true}); 
+}); 
+ app.use(express.json());
 app.use(session({ 
  store: new PgSessionStore(db), 
 secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false, cookie: {httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxeAge: 30 * 24 * 60 * 60 * 1000}}));
@@ -127,6 +147,7 @@ price_data:{
 currency:'usd',
 product_data:{
 name:item.name,
+metadata:{product_id:String(item.id)}, 
 },
 unit_amount:Math.round(item.price*100),
 },
