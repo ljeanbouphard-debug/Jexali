@@ -44,7 +44,7 @@ this.pool.query(
 'UPDATE user_sessions SET expire = $2 WHERE sid = $1',
  [sid, expire] 
  ) 
-.then() => callback()).catch(callback); 
+.then(() => callback()).catch(callback); 
 }  
 }
 const app = express();
