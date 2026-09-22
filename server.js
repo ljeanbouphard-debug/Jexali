@@ -8,12 +8,58 @@ const stripe = require('stripe') (process.env.STRIPE_SECRET_KEY);
 const stripeTest = require('stripe') (process.env.STRIPE_TEST_SECRET_KEY);
 
 const db = new Pool({connectionString: process.env.DATABASE_URL });
+class PgSessionStore extends session.Store {
+construction(pool) {
+super();
+this.pool = pool; 
+this.pool.query(` 
+CREATE TABLE IF NOT EXISTS user_sessions (
+sid TEXT PRIMARY KEY,
+sess JSONB NOT NULL,
+expire TIMESTAMPTZ NOT NULL
+)
+`).catch(console.error);
+}
+get(sid, callback) { 
+this.pool.query(
+'SELECT sess FROM user_sessions WHERE sid = $1 AND expire > NOW()', 
+[sid]
+)  
+.then(r => callback(null, r.rows[0]?.sess || null))
+.catch(callback); 
+}  
+set(sid, sess, callback = () => {} {  
+const maxAge = sess.cookie?.maxAge || 30 * 24 * 60 * 60 * 1000; 
+const expire = new Date(Date.now() + maxAge; 
+this.pool.query(
+`INSERT INTO user_sessions (sid, sess, expire)  
+VALUES ($1, $2, $3)
+ON CONFLICT (sid) DO UPDATE SET sess = EXCLUDED.sess, expire = EXCLUDED.expire`,
+[sid, sess, expire] 
+)  
+.then(() => callback()).catch(callback); 
+}  
+destroy(sid, callback = () => {} { 
+this.pool.query('DELETE FROM user_sessions WHERE sid = $1', [sid])
+.then(() => callback()).catch(callback);
+}
+touch(sid, sess, callback = () => {} {  
+const maxAge = sess.cookie?.maxAge || 30 * 24 * 60 * 60 * 1000; 
+const expire = new Date(Date.now() + maxAge); 
+this.pool.query(  
+'UPDATE user_sessions SET expire = $2 WHERE sid = $1',
+ [sid, expire] 
+ ) 
+.then() => callback()).catch(callback); 
+}  
+}
 const app = express();
 app.set('trust proxy', 1);
 app.use(cors());
 app.use(express.json());
 app.use(session({ 
-  secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false, cookie: {httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxeAge: 30 * 24 * 60 * 60 * 1000}}));
+ store: new pgSessionStore(db), 
+secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false, cookie: {httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxeAge: 30 * 24 * 60 * 60 * 1000}}));
 app.use(express.static(__dirname));
 app.get('/api/key-length', (req, res) => {
  res.json({ length:
