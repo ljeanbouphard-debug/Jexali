@@ -108,6 +108,8 @@ cart.length===0)
 
 
  if (dbProducts.length !== productIds.length) { return res.status(400).json({eror:'Invalid product in cart'});}
+ const outOfStock = dbProducts.find(p => (cart.find(c => String(c.id).replace(/^p/,"") ===String(p.id))?.quantity || 1) > p.stock);
+if (outOfStock) return res.status(400).json({error:'Not enough stock'}); 
 const sellerIds = dbProducts.map(product => product.seller_id);
  const allSameSellerId = sellerIds.every(id => id === sellerIds[0]);
 if (!allSameSellerId || !sellerIds[0]) return res.status(400).json({error:'Products must belong to one valid seller'});
