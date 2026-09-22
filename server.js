@@ -14,7 +14,7 @@ app.use(cors());
 app.use(express.json());
 app.use(session({
  
- secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false, cookie: {httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax"}}));
+ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false, cookie: {httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxeAge: 30 * 24 * 60 * 60 * 1000}}));
 app.use(express.static(__dirname));
 app.get('/api/key-length', (req, res) => {
  res.json({ length:
