@@ -85,6 +85,12 @@ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false, coo
 
 app.post("/api/login", async (req, res) => {
  try { const { email, password } = req.body; if (!email || !password) { return res.status(400).json({ error: "Email and password are required" }); } const normalizedEmail = email.trim().toLowerCase(); const result = await db.query("SELECT id, name, email, password_hash, role FROM users WHERE email = $1", [normalizedEmail]); const user = result.rows[0]; if (!user || !(await bcrypt.compare(password, user.password_hash))) { return res.status(401).json({ error:"Invalid email or password" }); } req.session.user = { id: user.id, name: user.name, email: user.email, role: user.role }; res.json({ success: true, user: req.session.user }); } catch (err) { console.error(err); res.status(500).json({ error: "Could not log in" }); } });
+app.get("/api/me" , (req, res) => 
+if (!req.session.user) { 
+return res.status(401).json({ error: "Not logged in" });
+}
+res.json({ success: true, user: req.session.user });
+});
 app.use(express.static(__dirname));
 app.get('/api/key-length', (req, res) => {
  res.json({ length:
