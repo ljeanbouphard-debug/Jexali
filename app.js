@@ -69,7 +69,7 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
   if(!sellerStripeId){alert("Please connect your Stripe account before publishing a product.");return;}
   const name=document.getElementById("pName").value.trim();
   const price=Number(document.getElementById("pPrice").value);
-  const stock=Number(document.getElementById("pStock").value
+  const stock=Number(document.getElementById("pStock").value);
   const category=document.getElementById("pCategory").value;
   const image=document.getElementById("pImage").value.trim();
   const desc=document.getElementById("pDesc").value.trim();
