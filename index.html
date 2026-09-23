@@ -109,17 +109,7 @@
         <button id="checkoutBtn" class="primary"> Checkout</button>
       </div>
     </section>
-  </main>
-
-  <footer>© 2026 Jexali — Buy. Sell. Discover.</footer>
-  <script src="app.js"></script>
-<script>
-const b=document.getElementById("connectStripeBtn");
-const id=localStorage.getItem("jexaliStripeAccountId");
-if(b&&id)b.textContent="Stripe Connected";
-</script>
-
- <section id="accountSection"> 
+<section id="accountSection"> 
 <h2>Create Account</h2>
 <input id="registerName" type="text" placeholder="Name">
 <input id="registerEmail" type="email" placeholder="Email">
@@ -135,6 +125,17 @@ if(b&&id)b.textContent="Stripe Connected";
 <button id="loginBtn" type="button">Login</button> 
 <p id="accountMessage"></p> 
  </section>   
+
+  </main>
+
+  <footer>© 2026 Jexali — Buy. Sell. Discover.</footer>
+  <script src="app.js"></script>
+<script>
+const b=document.getElementById("connectStripeBtn");
+const id=localStorage.getItem("jexaliStripeAccountId");
+if(b&&id)b.textContent="Stripe Connected";
+</script>
+
 
 </body>
 </html>
