@@ -3,7 +3,7 @@ const { Pool } = require('pg');
 const cors = require('cors')
 const express = require('express');
 const session = require("express-session");
-
+const bcrypt = require("bcryptjs");
 const stripe = require('stripe') (process.env.STRIPE_SECRET_KEY);
 const stripeTest = require('stripe') (process.env.STRIPE_TEST_SECRET_KEY);
 
