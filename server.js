@@ -60,7 +60,7 @@ return res.status(400).send(`webhook Error: ${err.message}`);
 } 
 if (event.type === 'checkout.session.completed') { 
 const session = event.data.object;
-const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {limit:100,expand:['data.price.product']};
+const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {limit:100,expand:['data.price.product']});
 for (const item of lineItems.data) { 
 const productId= Number(item.price.product.metadata.product_id); 
 const quantity = item.quantity || 1;
