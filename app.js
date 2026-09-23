@@ -199,9 +199,8 @@ body: JSON.stringify({ email, password })
 }); 
 const data = await response.json();
 if (response.ok) { 
-accountMessage.textContent = `Logged in as $ {data.user.name} (${data.user.role})`;`
-}
-} else {
+accountMessage.textContent = `Logged in as ${data.user.name} (${data.user.role})`;
+} else { 
 accountMessage.textContent = data.error || "Could not log in";
 } 
 });
