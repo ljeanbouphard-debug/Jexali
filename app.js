@@ -205,4 +205,9 @@ accountMessage.textContent = data.error || "Could not log in";
 } 
 });
 }
-
+fetch("/api/me")
+.then(res => res.ok ? res.json() : null)
+.then(data => {
+if (!data || !data.user) return;
+accountMessage.textContent = "Logged in as " + data.user.name + " (" + data.user.role + ")"; 
+});  
