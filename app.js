@@ -69,10 +69,11 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
   if(!sellerStripeId){alert("Please connect your Stripe account before publishing a product.");return;}
   const name=document.getElementById("pName").value.trim();
   const price=Number(document.getElementById("pPrice").value);
+  const stock=Number(document.getElementById("pStock").value
   const category=document.getElementById("pCategory").value;
   const image=document.getElementById("pImage").value.trim();
   const desc=document.getElementById("pDesc").value.trim();
-  if(!name || !desc || !(price>0)){document.getElementById("formMsg").textContent="Please complete all required fields.";return;}
+if(!name || !desc || !(price>0) || ! Number.isInteger(stock) || stock<0){document.getElementById("formMsg").textContent="Please complete all required fields.";return;}
   
   const p={id:"p"+Date.now(),name,price,category,image,desc,seller:sellerStripeId};
   const response=await fetch("/api/products",{
@@ -83,7 +84,7 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
         name:name,
           price:price,
         seller:sellerStripeId,
-        stock:0,
+        stock:stock,
         category: category,
         image: image,
         description: desc
