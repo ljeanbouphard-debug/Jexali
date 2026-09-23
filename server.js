@@ -51,7 +51,7 @@ const app = express();
 app.set('trust proxy', 1);
 app.use(cors());
 app.post('/api/stripe-webhook',express.raw({type:'application/json'}),async (req,res)=>{
-const sig req.headers['stripe-signature']; 
+const sig = req.headers['stripe-signature']; 
 let event; 
 try { 
 event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET); 
