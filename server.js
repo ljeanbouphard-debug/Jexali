@@ -77,9 +77,13 @@ res.json({received:true});
  app.use(express.json());
 
 app.post("/api/register", async (req, res)=> {try {const { name, email, password, role } = req.body; if (!name || !email || !password || ! ["buyer", "seller"].includes(role)) { return res.status(400).json({ error: "Invalid registration information" }); } const normalizedEmail = email.trim().toLowerCase(); const passwordHash = await bcrypt.hash(password, 12); const result = await db.query(`INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role`, [name.trim(), normalizedEmail, passwordHash, role]); res.json({ success: true, user: result.rows[0] }); } catch (err) { if (err.code === "23505") { return res.status(409).json({ error: "An account with this email already exists" });} console.error(err); res.status(500).json({ error: "Could not create account" });} });
+
+
 app.use(session({ 
  store: new PgSessionStore(db), 
 secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false, cookie: {httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxeAge: 30 * 24 * 60 * 60 * 1000}}));
+
+app.post("/api/login", async (req, res) => {try { const { email, password } = req.body; if (!email || !password) { return res.status(400).json({ error: :Email and password are required" }); } const normalizedEmail = email.trim().toLowerCase(); const result = await db.query("SELECT id, name, email, password_hash, role FROM users WHERE email = $1", [normalizedEmail]); const user = result.rows[0]; if (!user || !(await bcrypt.compare(password, user.password_hash))) { return res.status(401).json({ error:"Invalid email or password" }); } req.session.user = { id: user.id, name: user.name, email: user.email, role: user.role }; res.json({ success: true, user: req.session.user }); } catch (err) { console.error(err); res.status(500).json({ error: "Could not log in" }); } });
 app.use(express.static(__dirname));
 app.get('/api/key-length', (req, res) => {
  res.json({ length:
