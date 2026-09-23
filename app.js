@@ -169,3 +169,41 @@ const data=await res.json();
 localStorage.setItem("jexaliStripeAccountId",data.accountId);
 window.location.href=data.url;
 });
+
+const registerBtn = document.getElementById("registerBtn");
+const loginBtn = document.getElementById("loginBtn");
+const accountMessage = document.getElementById("accountMessage");
+if (registerBtn) {
+registerBtn.addEventListener("click", async () => { 
+const name = document.getElementById("registerName").value.trim();
+const email = document.getElementById("registerEmail").value.trim();  
+const password = document.getElementById("registerPassword").value;
+const role = document.getElementById("registerRole").value;
+const response = await fetch("/api/register", { 
+method: "POST", 
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({ name, email, password, role })
+});  
+const data = await response.json(); 
+accountMessage.textContent = data.success ? "account created successfully" : data.error; 
+});  
+}  
+if (loginBtn) {
+loginBtn.addEventListener("click , async () => { 
+const email = document.getElementById("loginEmail").value.trim();
+const password = document.getElementById("loginPassword").value;
+const response = await fetch("/api/login", { 
+method: "POST", 
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({ email, password }) 
+}); 
+const data = await response.json();
+if (reponse.ok) { 
+accountMessage.textContent = `Logged in as $ {data.user.name} (${data.user.role})`;`
+}
+} else {
+accountMessage.textContent = data.error || "Could not log in";
+} 
+});
+}
+
