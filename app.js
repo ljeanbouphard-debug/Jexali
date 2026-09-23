@@ -189,7 +189,7 @@ accountMessage.textContent = data.success ? "account created successfully" : dat
 });  
 }  
 if (loginBtn) {
-loginBtn.addEventListener("click , async () => { 
+loginBtn.addEventListener("click" , async () => { 
 const email = document.getElementById("loginEmail").value.trim();
 const password = document.getElementById("loginPassword").value;
 const response = await fetch("/api/login", { 
