@@ -119,5 +119,22 @@ const id=localStorage.getItem("jexaliStripeAccountId");
 if(b&&id)b.textContent="Stripe Connected";
 </script>
 
+ <section id="accountSection"> 
+<h2>Create Account</h2>
+<input id="registerName" type="text" placeholder="Name">
+<input id="registerEmail" type="email" placeholder="Email">
+<input id="registerPassword" type="password" placeholder="Password">
+<select id="registerRole">
+<option value="buyer">Buyer</option>
+<option value="seller">Seller</option>
+</select>
+<button id="registerBtn" type="button">Create Account</button>
+<h2>Login</h2>
+<input id="loginEmail" type="email" placeholder="Email">
+<input id="loginPassword" type="password" placeholder="Password"> 
+<button id="loginBtn" type="button">Login</button> 
+<p id="accountMessage"></p> 
+ </section>   
+
 </body>
 </html>
