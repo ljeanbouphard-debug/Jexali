@@ -47,6 +47,8 @@ this.pool.query(
 .then(() => callback()).catch(callback); 
 }  
 }
+
+db.query(`CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, role TEXT NOT NULL CHECK (role IN ('buyer', 'seller')), created_at TIMESTAMPTZ DEFAULT NOW())`).catch(console.error);
 const app = express();
 app.set('trust proxy', 1);
 app.use(cors());
