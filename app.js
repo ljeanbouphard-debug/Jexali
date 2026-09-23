@@ -198,7 +198,7 @@ headers: { "Content-Type": "application/json" },
 body: JSON.stringify({ email, password }) 
 }); 
 const data = await response.json();
-if (reponse.ok) { 
+if (response.ok) { 
 accountMessage.textContent = `Logged in as $ {data.user.name} (${data.user.role})`;`
 }
 } else {
