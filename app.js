@@ -173,6 +173,7 @@ window.location.href=data.url;
 const registerBtn = document.getElementById("registerBtn");
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
+logoutBtn.style.display = "none";
 const accountMessage = document.getElementById("accountMessage");
 if (registerBtn) {
 registerBtn.addEventListener("click", async () => { 
@@ -200,6 +201,7 @@ body: JSON.stringify({ email, password })
 }); 
 const data = await response.json();
 if (response.ok) { 
+logoutBtn.style.display = "";  
 accountMessage.textContent = `Logged in as ${data.user.name} (${data.user.role})`;
 } else { 
 accountMessage.textContent = data.error || "Could not log in";
@@ -211,6 +213,7 @@ logoutBtn.addEventListener("click", async () => {
 const response = await fetch("/api/logout", { method: "POST" }); 
 if (response.ok) {
 accountMessage.textContent = "Logged out";
+logoutBtn.style.display = "none"; 
 } 
 else { 
 accountMessage.textContent = "Could not log out";
@@ -221,5 +224,6 @@ fetch("/api/me")
 .then(res => res.ok ? res.json() : null)
 .then(data => {
 if (!data || !data.user) return;
+logoutBtn.style.display = "";  
 accountMessage.textContent = "Logged in as " + data.user.name + " (" + data.user.role + ")"; 
 });  
