@@ -65,8 +65,8 @@ function updateCartCount(){document.getElementById("cartCount").textContent=cart
 
 document.getElementById("productForm").addEventListener("submit",async e=>{
   e.preventDefault();
-  const sellerStripeId=localStorage.getItem("jexaliStripeAccountId");
-  if(!sellerStripeId){alert("Please connect your Stripe account before publishing a product.");return;}
+  
+  if(!stripeConnected){alert("Please connect your Stripe account before publishing a product.");return;}
   const name=document.getElementById("pName").value.trim();
   const price=Number(document.getElementById("pPrice").value);
   const stock=Number(document.getElementById("pStock").value);
@@ -75,7 +75,7 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
   const desc=document.getElementById("pDesc").value.trim();
 if(!name || !desc || !(price>0) || ! Number.isInteger(stock) || stock<0){document.getElementById("formMsg").textContent="Please complete all required fields.";return;}
   
-  const p={id:"p"+Date.now(),name,price,category,image,desc,seller:sellerStripeId};
+  const p={id:"p"+Date.now(),name,price,category,image,desc,};
   const response=await fetch("/api/products",{
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -83,7 +83,7 @@ if(!name || !desc || !(price>0) || ! Number.isInteger(stock) || stock<0){documen
       body:JSON.stringify({
         name:name,
           price:price,
-        seller:sellerStripeId,
+        
         stock:stock,
         category: category,
         image: image,
@@ -100,7 +100,7 @@ if (!response.ok) { const err=await response.json(); alert(err.error || "Product
 });
 
 function renderDashboard(){
- const stripeAccountId=localStorage.getItem("jexaliStripeAccountId"); 
+ const stripeAccountId=stripeConnected;
  if(stripeAccountId) fetch('/api/seller/stats')
   .then(res=>res.json())
   .then(data=>{
@@ -155,10 +155,12 @@ renderShop();
 const params=new URLSearchParams(window.location.search);
 if(params.get("success")==="1")alert("Thank you for your purchase!");
 if(params.get("canceled")==="1")alert("Payment canceled.");
-const savedStripeId=localStorage.getItem("jexaliStripeAccountId");
 
+let stripeConnected=false;
 const connectStripeBtn=document.getElementById("connectStripeBtn");
-if(savedStripeId) connectStripeBtn.textContent="Stripe Connected";
+fetch("/api/me").then(r=>r.ok? r.json():null).then(data=>{if(data?.stripeConnected) {stripeConnected=true;connectStripeBtn.textContent="Stripe Connected";}});
+
+
 
 connectStripeBtn.addEventListener("click",async()=>{
 const email = prompt("ENTER your seller email:");
@@ -166,7 +168,7 @@ const email = prompt("ENTER your seller email:");
   const res=await fetch("/api/connect/create-account",
 {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email})});
 const data=await res.json();
-localStorage.setItem("jexaliStripeAccountId",data.accountId);
+
 window.location.href=data.url;
 });
 
