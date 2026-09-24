@@ -122,6 +122,7 @@ res.json(products);
 });
 app.get('/api/seller/products', async (req,res)=>{if (!req.session.sellerId) return res.status(401).json({error:'NOT signed in'}); const products = (await db.query('SELECT * FROM products WHERE seller_id = $1', [Number(req.session.sellerId)])).rows; res.json(products);});
 db.query(`CREATE TABLE IF NOT EXISTS sellers (id SERIAL PRIMARY KEY, stripe_account_id TEXT UNIQUE, email TEXT UNIQUE)`);
+db.query("ALTER TABLE sellers ADD COLUMN IF NOT EXISTS user_id INTEGER UNIQUE");
 db.query("CREATE TABLE IF NOT EXISTS orders (id SERIAL PRIMARY KEY, stripe_session_id TEXT UNIQUE, seller_id INTEGER, amount REAL DEFAULT 0, seller_earnings REAL DEFAULT 0, jexali_fee REAL DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
 
 
