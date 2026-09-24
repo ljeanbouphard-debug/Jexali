@@ -91,6 +91,12 @@ return res.status(401).json({ error: "Not logged in" });
 }
 res.json({ success: true, user: req.session.user });
 });
+app.post("/api/logout", (req, res) => {
+req.session.destroy(err => { 
+if (err) return res.status(500).json({ error: "Could not log out" });
+res.json({ success: true })
+}); 
+}); 
 app.use(express.static(__dirname));
 app.get('/api/key-length', (req, res) => {
  res.json({ length:
