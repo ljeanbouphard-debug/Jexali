@@ -221,19 +221,21 @@ if (!req.session.sellerId) return res.status(401).json({error:'Not signed in'});
  res.json({sales:stats.sales, sellerEarnings:Number(stats.seller_earnings), jexaliFees:Number(stats.jexali_fees)});
 });
 app.post('/api/connect/create-account',async (req,res)=>{
+if (!req.session.user || req.session.user.role !== "seller") return res.status(401).json({ error: "Seller login required" });
+const userId = req.session.user.id; 
 const email = String(req.body.email ||
  '').trim().toLowerCase();
  if (!email) return res.status(400).json({error:'Email is required'});
- const sellerResult = await db.query('SELECT * FROM sellers WHERE email = $1', [email]); 
+ const sellerResult = await db.query('SELECT * FROM sellers WHERE user_id = $1 OR email = $2', [userId, email]); 
  const existingSeller = sellerResult.rows[0];
  const account = existingSeller &&
   existingSeller.stripe_account_id ? {id:
    existingSeller.stripe_account_id} : await
  stripe.accounts.create({type:'express'});
 
-if (existingSeller) await db.query('UPDATE sellers SET stripe_account_id = $1 WHERE email = $2', [account.id, email]);
-else await db.query('INSERT INTO sellers (stripe_account_id, email) VALUES ($1, $2)', [account.id, email]); 
-req.session.sellerId = existingSeller ? existingSeller.id : (await db.query('SELECT id FROM sellers WHERE email = $1', [email])).rows[0].id; 
+if (existingSeller) await db.query('UPDATE sellers SET stripe_account_id = $1, user_id = $2 WHERE id = $3', [account.id, userId, existingSeller.id]);
+else await db.query('INSERT INTO sellers (stripe_account_id, email, user_id) VALUES ($1, $2, $3)', [account.id, email, userId]); 
+req.session.sellerId = existingSeller ? existingSeller.id : (await db.query('SELECT id FROM sellers WHERE user_id = $1', [userId])).rows[0].id; 
 await new Promise((resolve, reject) => req.session.save(err => err ? reject(err) : resolve()));
  const link = await stripe.accountLinks.create({
 account: account.id,
