@@ -205,6 +205,7 @@ const data = await response.json();
 if (response.ok) { 
 logoutBtn.style.display = "";  
 accountMessage.textContent = `Logged in as ${data.user.name} (${data.user.role})`;
+fetch("/api/me").then(r=>r.json()).then(me=>{stripeConnected=!! me.stripeConnected;connectStripeBtn.textContent=stripeConnected?"Stripe Connected":"Connect with Stripe";});  
 } else { 
 accountMessage.textContent = data.error || "Could not log in";
 } 
@@ -216,6 +217,8 @@ const response = await fetch("/api/logout", { method: "POST" });
 if (response.ok) {
 accountMessage.textContent = "Logged out";
 logoutBtn.style.display = "none"; 
+stripeConnected=false; 
+connectStripeBtn.textContent="Connect with Stripe";  
 } 
 else { 
 accountMessage.textContent = "Could not log out";
