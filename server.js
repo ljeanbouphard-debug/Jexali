@@ -88,11 +88,12 @@ app.post("/api/login", async (req, res) => {
 const sellerResult = await db.query("SELECT id FROM sellers WHERE user_id = $1", [user.id]);
 if (sellerResult.rows[0]) req.session.sellerId = sellerResult.rows[0].id;      
 res.json({ success: true, user: req.session.user }); } catch (err) { console.error(err); res.status(500).json({ error: "Could not log in" }); } });
-app.get("/api/me" , (req, res) => {
+app.get("/api/me" , async (req, res) => {
 if (!req.session.user) { 
 return res.status(401).json({ error: "Not logged in" });
 }
-res.json({ success: true, user: req.session.user });
+const seller = req.session.user.role === "seller" ? (await db.query("SELECT stripe_account_id FROM sellers WHERE user_id = $1", [req.session.user.id])).rows[0] : null;
+ res.json({ success: true, user: req.session.user, stripeConnected: !! seller?.stripe_account_id });
 });
 app.post("/api/logout", (req, res) => {
 req.session.destroy(err => { 
