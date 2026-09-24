@@ -100,8 +100,8 @@ if (!response.ok) { const err=await response.json(); alert(err.error || "Product
 });
 
 function renderDashboard(){
- const stripeAccountId=stripeConnected;
- if(stripeAccountId) fetch('/api/seller/stats')
+ 
+  fetch('/api/seller/stats')
   .then(res=>res.json())
   .then(data=>{
     if(data.error)return;
@@ -110,14 +110,14 @@ function renderDashboard(){
     document.getElementById("jexaliFees").textContent=money(data.jexaliFees);
   });
 fetch('/api/seller/products').then(res=>res.json()).then(products=>{if(products.error) return;customProducts=products; document.getElementById("listingCount").textContent=products.length; document.getElementById("sellerListings").innerHTML=products.length? products.map(p=>cardHTML(p,true)).join("") : "<p>No listings yet.</p>";
-document.querySelectorAll(".remove-product").forEach(b=>b.onclick=async()=>{const id=String(b.dataset.id).replace(/^p/,""); const r=await fetch("/api/products/"+id, {method:"DELETE"});if(r.ok) {customProducts=customProducts.filter(p=>String(p.id)!==String(id));renderDasboard();}});                                                                   
+document.querySelectorAll(".remove-product").forEach(b=>b.onclick=async()=>{const id=String(b.dataset.id).replace(/^p/,""); const r=await fetch("/api/products/"+id, {method:"DELETE"});if(r.ok) {customProducts=customProducts.filter(p=>String(p.id)!==String(id));renderDashboard();}});                                                                   
    }); 
 
 
   
-  document.getElementById("salesCount").textContent=stripeAccountId ? "..." : sales;
-  document.getElementById("earnings").textContent=stripeAccountId ? "..." : money(sellerRevenue)
-  document.getElementById("jexaliFees").textContent=stripeAccountId ? "..." : money(jexaliRevenue)
+  
+  
+  
   
 
 
