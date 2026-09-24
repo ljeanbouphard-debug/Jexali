@@ -172,6 +172,7 @@ window.location.href=data.url;
 
 const registerBtn = document.getElementById("registerBtn");
 const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 const accountMessage = document.getElementById("accountMessage");
 if (registerBtn) {
 registerBtn.addEventListener("click", async () => { 
@@ -203,6 +204,17 @@ accountMessage.textContent = `Logged in as ${data.user.name} (${data.user.role})
 } else { 
 accountMessage.textContent = data.error || "Could not log in";
 } 
+});
+}
+if (logoutBtn) {
+logoutBtn.addEventListener("click", async () => {
+const response = await fetch("/api/logout", { method: "POST" }); 
+if (response.ok) {
+accountMessage.textContent = "Logged out";
+} 
+else { 
+accountMessage.textContent = "Could not log out";
+}
 });
 }
 fetch("/api/me")
