@@ -120,6 +120,11 @@ app.get('/api/stripe-test', async (req,res) => {
 });
 db.query("CREATE TABLE IF NOT EXISTS products (id SERIAL PRIMARY KEY, name TEXT, price REAL, seller TEXT, stock INTEGER DEFAULT 0)");
 db.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS category TEXT, ADD COLUMN IF NOT EXISTS image TEXT, ADD COLUMN IF NOT EXISTS description TEXT");
+app.get('/api/cleanup-test-products', async (req,res)=>{
+const ids = [29,31,32,33]; 
+const result = await db.query('DELETE FROM products WHERE id = ANY($1::int[]) RETURNING id', [ids]); 
+res.json({deleted: result.rows.map(row => row.id)}); 
+}); 
 app.get('/api/products', async (req,res)=>{
 const products = (await db.query('SELECT * FROM products')).rows;
 res.json(products);
