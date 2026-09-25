@@ -87,7 +87,7 @@ font-size:12px;
 @media(max-width:800px){.hero-content{grid-row:auto;}}
 .hero{row-gap:18px;}
 .hero-card{grid-column:2;}
-
+.hero-card{align-self:start;}
   
 
   
