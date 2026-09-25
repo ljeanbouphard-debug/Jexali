@@ -94,10 +94,10 @@ font-size:12px;
 @media(max-width:500px){.visual-stats{grid-template-columns:1fr;}}  
 @media(max-width:500px){.hero-content h1{font-size:40px;line-height:1.08;}}
 @media(max-width:500px){.actions{display:grid;grid-template-columns:1fr 1fr;}.actions button{width:100%;}}  
-  
-
-
-
+@media(max-width:500px){.topbar{padding:14px 5%;gap:10px;}}  
+@media(max-width:500px){.brand{font-size:24px;}}
+@media(max-width:500px){.topbar nav{gap:4px;}}
+@media(max-width:500px){.topbar button{padding:7px 6px;font-size:14px;}}
   
 
   
