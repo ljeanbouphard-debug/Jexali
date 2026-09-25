@@ -25,5 +25,12 @@ footer{text-align:center;padding:28px;color:#6b7280}
 /* Seller Dashboard remove button */ #dashboard #sellerListings .remove-product{ margin-top:14px; padding:11px 16px; border:1px solid #fecaca; border-radius:10px; background:#fff5f5; color:#b42318; font-weight:700; cursor:pointer; transition:background .2s ease, border-color .2s ease; } #dashboard #sellerListings .remove-product:hover{ background:#fee2e2; border-color:#fca5a5; }
 /* Seller Dashboard responsive layout */ @media (min-width:801px) and (max-width:1100px){ #dashboard #sellerListings{ grid-template-columns:repeat(2,1fr); } #dashboard #sellerListings .card img, #dashboard #sellerListings .placeholder{ height:220px;} } @media (max-width:800px){ #dashboard #sellerListings{ grid-template-columns:1fr; } #dashboard #sellerListings .card img, #dashboard #sellerListings .placeholder{ height:220px;} }
 /* Dashboard medium screen fix */ @media (min-width:700px) and (max-width:1200px){ #dashboard #sellerListings{ grid-template-columns:repeat(2,minmax(0,1fr)); } #dashboard #sellerListings .card img, #dashboard #sellerListings .placeholder{ height:220px;} }
-
+.hero-content{max-width:620px}
+.hero-content h1{font-size:clamp(42px,6w,72px);line-height:1.05;margin:12px 0 18px}
+.hero-text{font-size:18px;line-height:1.7; color:#5b6472;max-width:560px}
+.hero-card{background:#fff;border-radius:24px; padding:32px;box-shadow:0 20px 50px rgba(15,23,42,.122)}
+.category-preview{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:24px 0}
+.category-preview div{bckground:#f6f7fb;border:1px solid #e5e7eb;border-radius:14px;padding:18px;text-align:center}
+.hero-card h3{font-size:28px;line-height:1.25;margin:10px 0}
+.hero-card .primary{width:100%;margin-top:4px
 
