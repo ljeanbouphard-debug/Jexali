@@ -39,7 +39,7 @@ function cardHTML(p, seller=false){
       <h3>${escapeHtml(p.name)}</h3>
       <p>${escapeHtml(p.desc)}</p>
       <div class="price">${money(p.price)}</div>
-      ${seller?`<button class="secondary remove-product" data-id="${p.id}">Remove listing</button>`:`<button class="primary add-cart" data-id="${p.id}">Add to Cart</button>`}
+     ${seller ? `<button class="secondary remove-product" data-id="${p.id}">Remove listing</button>` : Number(p.stock) <= 0 ? `<button class="primary" disabled>Out of Stock</button>` : `<button class="primary add-cart" data-id="${p.id}">Add to Cart</button>`} 
     </div>
   </article>`;
 }
@@ -75,7 +75,7 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
   const desc=document.getElementById("pDesc").value.trim();
 if(!name || !desc || !(price>0) || ! Number.isInteger(stock) || stock<0){document.getElementById("formMsg").textContent="Please complete all required fields.";return;}
   
-  const p={id:"p"+Date.now(),name,price,category,image,desc,};
+  const p={id:"p"+Date.now(),name,price,stock,category,image,desc,};
   const response=await fetch("/api/products",{
     method:'POST',
     headers:{'Content-Type':'application/json'},
