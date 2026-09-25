@@ -82,9 +82,9 @@ gap:4px;
 color:#64748b;
 font-size:12px;
 }
-
-
-
+.hero{grid-template-columns:1.1fr .9fr;}
+.hero-content{grid-row:1 / span 2;align-self:center;}
+@media(max-width:800px){.hero-content{grid-row:auto;}}
 
 
 
