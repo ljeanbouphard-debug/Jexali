@@ -20,7 +20,7 @@ footer{text-align:center;padding:28px;color:#6b7280}
 /* MODERN SELLER DASHBOARD */ #dashboard .section-head{ background:#fff; padding:26px 28px; border-radius:18px; box-shadow:0 8px 30px rgba(15,23,42,.08); margin-bottom:24px; } #dashboard .stats{ grid-template-columns:repeat(4,1fr); gap:18px; } #dashboard .stats div{ padding:24px; border:0; box-shadow:0 6px 22px rgba(15,23,42,.07); } #dashboard .stats strong{ font-size:30px; margin-bottom:8px; } #dashboard .stats span{ font-size:14px; font-weight:600; } #dashboard #connectStripeBtn{ padding:13px 20px; border-radius:12px; }
 /* MODERN ACCOUNT SECTION */ #accountSection{ max-width:720px; margin:32px auto 0; padding:28px; background:#fff; border-radius:18px; box-shadow:0 8px 30px rgba(15,23,42,.08); } #accountSection h2{ margin:0 0 16px; font-size:24px; } #accountSection input, #accountSection select{ width:100%; padding:12px 14px; margin-bottom:12px; border:1px solid #d1d5db; border-radius:10px; background:#f9fafb; } #accountSection button{ padding:12px 18px; margin:4px 8px 18px 0; border:0; border-radius:10px; background:#111827; color:#fff; font-weight:700; cursor:pointer; } #accountMessage{ font-weight:600; }
 #accountSection{margin-top:50px;}
-
+/* Seller Dashboard stats */ #dashboard .stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin:24px 0; } #dashboard .stats div{ background:#fff; border:1px solid #e9edf3; border-radius:18px; padding:24px; min-height:110px; box-shadow:0 8px 24px rgba(15,23,42,.06); } #dashboard .stats strong{ display:block; font-size:28px; margin-bottom:8px; } #dashboard .stats span{ font-size:14px; font-weight:600; color:#667085; } @media (max-width:800px){ #dashboard .stats{ grid-template-columns:repeat(2,1fr);} }
 
 
 
