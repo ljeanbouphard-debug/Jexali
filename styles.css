@@ -565,8 +565,7 @@ font-weight:900;
 }
 #home .trending-grid{
  display:grid;
- grid-template-columns:repeat(5,minmax
- (0,1fr));
+ grid-template-columns:repeat(5,minmax(0,1fr));
  gap:14px;
 }
 #home .trending-card{
@@ -610,8 +609,7 @@ font-weight:900;
   margin-top:34px;
  }
  #home .trending-grid{
-  grid-template-columns:repeat(5,minmax
-  (0,1fr));
+  grid-template-columns:repeat(5,minmax(0,1fr));
   gap:7px;
  }
  #home .trending-photo{
