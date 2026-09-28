@@ -368,6 +368,9 @@ font-weight:900;
  font-weight:900;
  letter-spacing:-1.5px;
 }
+#home .hero-content h1 span{
+ color:#e89b00;
+}
 #home .hero-text{
  color:#667085;
  line-height:1.7;
