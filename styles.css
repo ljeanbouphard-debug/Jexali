@@ -347,7 +347,56 @@ font-weight:900;
   margin-left:auto;
  }
 }
-
+/* JEXALI HOMEPAGE HERO FINAL STYLE
+*/
+#home .hero{
+ margin-top:18px;
+ padding:55px 48px;
+ border-radius:28px;
+ background:linear-gradient(135deg,#ffffff 0%,#f8fafc 55%,#fff7df 100%);
+ border:1px solid #e7eaf0;
+ box-shadow:0 18px 50px
+ rgba(15,23,42,.07);
+}
+#home .hero-content .eyebrow{
+ color:#b77900;
+ font-size:13px;
+ letter-spacing:2.5px;
+}
+#home .hero-content h1{
+ color:#111827;
+ font-weight:900;
+ letter-spacing:-1.5px;
+}
+#home .hero-text{
+ color:#667085;
+ line-height:1.7;
+}
+#home .actions .primary{
+ background:#111827;
+ color:#fff;
+ padding:14px 22px;
+}
+#home .actions .secondary{
+ background:#f3b61f;
+ color:#111827;
+ padding:14px 22px;
+}
+#home .actions button{
+ transition:transform .2s
+ ease,box-shadow .2s ease;
+}
+#home .actions button:hover{
+ transform:translateY(-2px);
+ box-shadow:0 8px 18px
+ rgba(15,23,42,.14);
+}
+@media(max-width:800px){
+ #home .hero{
+  padding:34px 24px;
+  border-radius:20px;
+ }
+}
 
 
 
