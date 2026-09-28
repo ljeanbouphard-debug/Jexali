@@ -9,13 +9,17 @@
 <body>
   <header class="topbar">
     <div class="brand">JEXALI</div>
-    <nav>
+    <nav class="main-nav">
       <button data-view="home">Home</button>
       <button data-view="shop">Shop</button>
       <button data-view="sell">Sell on Jexali</button>
       <button data-view="dashboard">Seller Dashboard</button>
-      <button data-view="cart">Cart <span id="cartCount">0</span></button>
     </nav>
+    <button class="cart-button"
+      data-view="cart">
+      <span class="cart-icon">&#128722;</span>Cart
+      <span id="cartCount">0</span>
+    </button>
   </header>
 
   <main class="wrap">
