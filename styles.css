@@ -397,9 +397,30 @@ font-weight:900;
   border-radius:20px;
  }
 }
+/* JEXALI HERO DESKTOP LAYOUT */
+@media(min-width:801px){
+ #home .hero{
+  grid-template-columns:1.05fr
+  .95fr;
+  column-gap:36px;
+  row-gap:18px;
+  align-items:center;
+ }
+#home .hero-content{
+ grid-row:1 / span 2;
+ align-self:center;
+}
+#home .hero-visual,
+#home .hero-card{
+ grid-column:2;
+}
+}
 
 
 
 
+
+
+ 
 
 
