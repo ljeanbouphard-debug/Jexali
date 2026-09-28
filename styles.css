@@ -169,7 +169,7 @@ font-size:12px;
  font-weight:700;
  cursor:pointer;
 }
-@media(max-width:900px){
+@media(max-width:600px){
  .featured-grid{
   grid-template-columns:repeat(2,1fr);
  }
