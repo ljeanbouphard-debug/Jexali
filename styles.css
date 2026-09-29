@@ -727,7 +727,7 @@ font-weight:900;
 }
 .brand{
  display:grid;
- grid-template-columns:48px auto;
+ grid-template-columns:64px auto;
  column-gap:9px;
  align-items:center;
 }
