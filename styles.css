@@ -254,6 +254,18 @@ font-size:12px;
  background-repeat:no-repeat;
  margin-bottom:16px;
 }
+ .fashion-photo{
+  background-image:url("image/file_00000000ad5081f589eff124adccee11.png.jpg");
+}
+.electronics-photo{
+ background-image:url("file_00000000be6081f5a9dce75ff561d5ca.png.jpg");
+}
+.home-photo{
+ background-image:url("file_00000000734c81f583dccdd9cde52119.png.jpg");
+}
+.beauty-photo{
+ background-image:url("file_00000000e2c481f59194dfdeb70d79b0.png.jpg");
+}
 .category-card h3{
  font-size:20px;
  margin:4px 0 14px;
