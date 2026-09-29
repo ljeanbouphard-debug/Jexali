@@ -741,7 +741,17 @@ font-weight:900;
 .brand-tagline{
  grid-column:2;
 }
-
+/* JEXALI LOGO FINAL SIZE */
+.brand{
+ display:flex;
+ align-items:center;
+}
+.brand-logo{
+ width:220px;
+ height:auto;
+ object-fit:contain;
+ display:block;
+}
 
 
 
