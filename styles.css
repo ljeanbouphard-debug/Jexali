@@ -285,6 +285,18 @@ font-size:12px;
   grid-template-columns:repeat(2, 1fr);
  }
 }
+@media(max-width:600px){
+ .category-grid{
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+ }
+ .category-card{
+  padding:8px;
+ }
+ .category-photo{
+  height:120px;
+ }
+}
 /* Jexali HOMEPAGE HEADER */
 .topbar{
  position:sticky;
