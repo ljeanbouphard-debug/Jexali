@@ -183,21 +183,25 @@ font-size:12px;
   flex-direction:column;
  }
 .featured-image{
- height:90px;
+ height:115px;
 }
  .featured-card{
   padding:7px;
  }
  .featured-card h3{
-  font-size:11px
+  font-size:10px;
+  line-height:1.2;
+  min-height:24px;
 }
  .featured-price{
-  font-size:12px;
-  margin-bottom:7px;
+  font-size:11px;
+  margin-bottom:8px;
+  font-weight:800;
  }
  .featured-card button{
-  padding:7px 4px;
-  font-size:10px;
+  padding:8px 2px;
+  font-size:9px;
+  white-space:nowrap;
  }
  .product-category{
   font-size:8px;
