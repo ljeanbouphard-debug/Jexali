@@ -1,6 +1,6 @@
 *{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#f6f7fb;color:#15171c}
 button,input,select,textarea{font:inherit}.topbar{position:sticky;top:0;z-index:10;background:#111827;color:white;padding:16px 5%;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
-.brand{font-size:28px;font-weight:900;letter-spacing:2px}.topbar nav{display:flex;gap:8px;flex-wrap:wrap}.topbar button{border:0;background:transparent;color:white;padding:10px 12px;border-radius:10px;cursor:pointer}.topbar button:hover{background:#253047}
+.brand{font-size:28px;font-weight:900;letter-spacing:2px}.topbar nav{display:flex;gap:8px;flex-wrap:wrap}.topbar button{border:0;background:transparent;color:white;padding:10px a12px;border-radius:10px;cursor:pointer}.topbar button:hover{background:#253047}
 .wrap{max-width:1180px;margin:auto;padding:34px 5% 60px}.view{display:none}.view.active{display:block}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:28px;align-items:center;min-height:470px}
 .hero h1{font-size:clamp(40px,7vw,76px);line-height:.98;margin:8px 0 18px}.hero p{font-size:18px;max-width:650px;color:#555b66}.eyebrow{font-weight:800;letter-spacing:2px;color:#8a5a00}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
 .primary,.secondary{padding:13px 18px;border-radius:12px;border:0;cursor:pointer;font-weight:800}.primary{background:#111827;color:white}.secondary{background:#f3b61f;color:#111827}
@@ -661,6 +661,9 @@ font-weight:900;
  width:42px;
  height:42px;
  fill:currentColor;
+}
+.orange-icon{
+ color:#ff6b00;
 }
 .blue-icon{
  color:#1473e6;
