@@ -662,6 +662,9 @@ font-weight:900;
  height:42px;
  fill:currentColor;
 }
+.feature-icon svg path[fill="white"]{
+ fill:white;
+}
 .orange-icon{
  color:#ff6b00;
 }
