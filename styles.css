@@ -755,7 +755,16 @@ font-weight:900;
 .topbar .main-nav{
  justify-content:center;
 }
-
+@media(min-width:801px){
+ .topbar{
+  flex-wrap:nowrap;
+ }
+ .topbar .main-nav{
+  width:auto;
+  flex-basis:auto;
+  order:initial;
+ }
+}
 
 
 
