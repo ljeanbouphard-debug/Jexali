@@ -725,6 +725,25 @@ font-weight:900;
  letter-spacing:1px;
  color:#d1d5db;
 }
+.brand{
+ display:grid;
+ grid-template-columns:48px auto;
+ column-gap:9px;
+ align-items:center;
+}
+.brand-logo{
+ width:48px;
+ height:48px;
+ object-fit:cover;
+ border-radius:10px;
+ grid-row:1 / span 2;
+}
+.brand-name,
+.brand-tagline{
+ grid-column:2;
+}
+
+
 
 
 
