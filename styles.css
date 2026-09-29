@@ -649,6 +649,25 @@ font-weight:900;
  font-size:11px;
 }
 }
+.feature-icon{
+ width:52px;
+ height:52px;
+ margin:0 auto 12px;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+}
+.feature-icon svg{
+ width:42px;
+ height:42px;
+ fill:currentColor;
+}
+.orange-icon{
+ color:#ff6b00;
+}
+
+
+
 
 
 
