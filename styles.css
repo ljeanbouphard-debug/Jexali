@@ -732,11 +732,10 @@ font-weight:900;
  align-items:center;
 }
 .brand-logo{
- width:48px;
- height:48px;
- object-fit:cover;
- border-radius:10px;
- grid-row:1 / span 2;
+ width:190px;
+ height:64px;
+ object-fit:contain;
+ display:block; 
 }
 .brand-name,
 .brand-tagline{
