@@ -292,24 +292,71 @@ class="fa-solid fa-user-group"></i></div>
         <button id="checkoutBtn" class="primary"> Checkout</button>
       </div>
     </section>
-<section id="accountSection"> 
-<h2>Create Account</h2>
-<input id="registerName" type="text" placeholder="Name">
-<input id="registerEmail" type="email" placeholder="Email">
-<input id="registerPassword" type="password" placeholder="Password">
-<select id="registerRole">
-<option value="buyer">Buyer</option>
-<option value="seller">Seller</option>
-</select>
-<button id="registerBtn" type="button">Create Account</button>
-<h2>Login</h2>
-<input id="loginEmail" type="email" placeholder="Email">
-<input id="loginPassword" type="password" placeholder="Password"> 
-<button id="loginBtn" type="button">Login</button> 
-<p id="accountMessage"></p> 
-<button id="logoutBtn" type="button">Logout</button>  
- </section>   
-
+<section id="accountSection">
+  <div  class="account-intro">
+    <p class="eyebrow">JOIN JEXALI</p>
+    <h2>Buy. Sell. Discover.</h2>
+    <p>Create your Jexali account and become part of the marketplace.</p>
+  </div>
+  <div class="account-box">
+    <div class="register-box">
+      <h2>Create Account</h2>
+      <p>New to Jexali? Get started today.</p>
+      <input
+        id="registerName"
+        type="text"
+        placeholder="Full name"
+        >
+      <input
+        id="registerEmail"
+        type="email"
+        placeholder="Email address"
+        >
+      <input
+        id="registerPassword"
+        type="password"
+        placeholder="Password"
+        >
+      <select id="registerRole">
+        <option value="buyer">
+          Buyer
+        </option>
+      <option value="seller">
+        Seller
+      </option>
+      </select>
+      <button
+        id="registerBtn"
+        type="button"
+        >
+        Create Account
+      </button>
+    </div>
+<div class="account-divider"></div>
+ <div class="login-box">
+   <h2>Welcome Back</h2>
+   <p>Already have an account? Log in.</p>
+   <input
+     id="loginEmail"
+     type="email"
+     placeholder="Email address"
+     >
+<input
+  id="loginPassword"
+  type="Password"
+  placeholder="Password"
+  >
+    <button id="loginBtn" type="button">
+      Login
+    </button>
+    <p id="accountMessage"></p>
+    <button id="logoutBtn"
+      type="button">
+      Logout
+    </button>
+  </div>
+  </div>
+  </section>
   </main>
 
   <footer>© 2026 Jexali — Buy. Sell. Discover.</footer>
