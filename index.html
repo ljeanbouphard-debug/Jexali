@@ -258,6 +258,7 @@ class="fa-solid fa-user-group"></i></div>
           <span><i class="fa-solid fa-chart-line"></i> Grow your business</span>
         </div>
         <form id="productForm">
+          <div class ="sell-form-card">
           <div class="sell-section-title">
            <h3>Product Details</h3>
             <p>Tell customers about your product.</p>
@@ -282,6 +283,8 @@ class="fa-solid fa-user-group"></i></div>
             placeholder="Write a clear description of your product..."
               required></textarea>
           </label>
+          </div>
+          <div class="sell-form-card">
           <div class="sell-section-title">
             <h3>Pricing & Inventory</h3>
             <p>Set your price, stock, and shipping fee.</p>
@@ -294,6 +297,8 @@ class="fa-solid fa-user-group"></i></div>
     min="0" step="0.01" value="0" required />
 </label>
           </div>
+          </div>
+          <div class="sell-form-card">
         <div class="sell-section-title">
           <h3>Product Photo</h3>
           <p>Add a photo of your product.</p>
@@ -308,7 +313,7 @@ class="fa-solid fa-user-group"></i></div>
             <input id="pImage"
               placeholder="https://..." />
           </label>
-          
+          </div>
           <button class="primary" type="submit">Publish Product</button>
         </form>
         <div id="formMsg" class="message"></div>
