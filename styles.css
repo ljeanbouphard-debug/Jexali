@@ -986,6 +986,29 @@ color:#0b2948;
   grid-template-columns:1fr;
  }
 }
+#sell .sell-hero{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:30px;
+}
+#sell .sell-hero-text{
+ flex:1;
+}
+#sell .sell-hero-image{
+ flex:1;
+ text-align:right;
+}
+#sell .sell-hero-image img{
+ max-width:100%;
+ height:auto;
+}
+@media(max-width:700px){
+ #sell .sell-hero{
+  flex-direction:column;
+ }
+}
+
 
 
 
