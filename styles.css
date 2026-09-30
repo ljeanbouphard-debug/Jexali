@@ -921,6 +921,7 @@ color:#0b2948;
  margin:22px 0 30px;
  font-weight:700;
  color:#374151;
+ align-items:center;
 }
 #sell .seller-benefits i{
  width:38px;
@@ -970,15 +971,23 @@ color:#0b2948;
   gap:18px;
  }
 #sell .photo-upload{
- padding:24px;
+ padding:32px 24px;
  border:2px dashed #d0d5dd;
  border-radius:14px;
  background:#f9fafb;
  text-align:center;
  cursor:pointer;
 }
+#sell .photo-upload:hover{
+ border-color:#f3b61f;
+ background:#fffaf0;
+}
 #sell .photo-upload input{
  margin-top:10px;
+}
+#sell .photo-upload{
+ color:#374151;
+ font-weight:700;
 }
 #sell .photo-or{
  text-align:center;
@@ -986,6 +995,10 @@ color:#0b2948;
  font-size:14px;
  font-weight:600;
  margin:4px 0;
+}
+#sell #pImage{
+ background:#fff;
+ border:1px solid #d0d5dd;
 }
 #sell .sell-description textarea{
  min-height:120px;
@@ -999,6 +1012,10 @@ color:#0b2948;
  background:#f3b61f;
  color:#111827;
  font-weight:800;
+ font-size:16px;
+}
+#sell #productForm > .primary:hover{
+ background:#ffc83d;
 }
 @media(max-width:700px){
  #sell .panel{
@@ -1014,6 +1031,7 @@ color:#0b2948;
  align-items:center;
  justify-content:space-between;
  gap:30px;
+ margin-bottom:12px;
 }
 #sell .sell-hero-text{
  flex:1;
@@ -1024,6 +1042,7 @@ color:#0b2948;
 }
 #sell .sell-hero-image img{
  max-width:100%;
+ max-height:300px;
  height:auto;
 }
 @media(max-width:700px){
