@@ -253,9 +253,9 @@ class="fa-solid fa-user-group"></i></div>
         </div>
         </div>
         <div class="seller-benefits">
-          <span>✓ List your products</span>
-          <span>✓ Reach new customers</span>
-          <span>✓ Grow your business</span>
+          <span><i class="fa-solid fa-box-open"></i> List your products</span>
+          <span><i class="fa-solid fa-users"></i> Reach new customers</span>
+          <span><i class="fa-solid fa-chart-line"></i> Grow your business</span>
         </div>
         <form id="productForm">
           <div class="sell-section-title">
@@ -276,6 +276,12 @@ class="fa-solid fa-user-group"></i></div>
             </select>
           </label>
           </div>
+          <label
+          class="sell-description">Description
+            <textarea id="pDesc" rows="4"
+            placeholder="Write a clear description of your product..."
+              required></textarea>
+          </label>
           <div class="sell-section-title">
             <h3>Pricing & Inventory</h3>
             <p>Set your price, stock, and shipping fee.</p>
@@ -302,12 +308,7 @@ class="fa-solid fa-user-group"></i></div>
             <input id="pImage"
               placeholder="https://..." />
           </label>
-          <label
-          class="sell-description">Description
-            <textarea id="pDesc" rows="4"
-            placeholder="Write a clear description of your product..."
-              required></textarea>
-          </label>
+          
           <button class="primary" type="submit">Publish Product</button>
         </form>
         <div id="formMsg" class="message"></div>
