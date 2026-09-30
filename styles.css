@@ -899,8 +899,93 @@ font-weight:900;
   font-size:30px;
  }
 }
-
-
+/* JEXALI SELL PAGE */
+#sell .panel{
+ max-width:1000px;
+ margin:20px auto;
+ padding:36px;
+ border-radius:24px;
+ background:#fff;
+ box-shadow:0 14px 40px
+ rgba(15,23,42,.08);
+}
+#sell .panel > h2{
+ font-size:38px;
+ margin:8px 0 10px;
+color:#0b2948;
+}
+#sell .seller-benefits{
+ display:flex;
+ gap:24px;
+ flex-wrap:wrap;
+ margin:22px 0 30px;
+ font-weight:700;
+ color:#374151;
+}
+#sell .sell-section-title{
+ margin:28px 0 16px;
+ padding-top:22px;
+ border-top:1px solid #e5e7eb;
+}
+#sell .sell-section-title h3{
+ margin:0 0 5px;
+ font-size:21px;
+ color:#111827;
+}
+#sell .sell-section-title p{
+ margin:0;
+ color:#667085;
+ font-size:14px;
+}
+ #sell .sell-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+ }
+ #sell .pricing-row{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:18px;
+ }
+#sell .photo-upload{
+ padding:24px;
+ border:2px dashed #d0d5dd;
+ border-radius:14px;
+ background:#f9fafb;
+ text-align:center;
+ cursor:pointer;
+}
+#sell .photo-upload input{
+ margin-top:10px;
+}
+#sell .photo-or{
+ text-align:center;
+ color:#98a2b3;
+ font-size:14px;
+ font-weight:600;
+ margin:4px 0;
+}
+#sell .sell-description textarea{
+ min-height:120px;
+ resize:vertical;
+}
+#sell #productForm > .primary{
+ width:100%;
+ padding:14px 20px;
+ margin-top:8px;
+ border-radius:10px;
+ background:#111827;
+ font-weight:800;
+}
+@media(max-width:700px){
+ #sell .panel{
+  padding:24px 18px;
+ }
+ #sell .sell-row,
+ #sell .pricing-row{
+  grid-template-columns:1fr;
+ }
+}
 
 
 
