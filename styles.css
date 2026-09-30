@@ -1060,7 +1060,15 @@ color:#0b2948;
 + .sell-form-card{
  margin-top:18px;
 }
-
+#sell .photo-upload input{
+ width:100%;
+ padding:12px;
+ border:1px solid #e5e7eb;
+ border-radius:10px;
+ background:#fff;
+ cursor:pointer;
+ margin-top:14px;
+}
 
 
 
