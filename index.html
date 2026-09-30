@@ -243,13 +243,23 @@ class="fa-solid fa-user-group"></i></div>
     <section id="sell" class="view">
       <div class="panel">
         <p class="eyebrow">SELLER CENTER</p>
-        <h2>Post a product</h2>
-        <p class="muted">Create your listing and start selling on Jexali.</p>
+        <h2>Start selling on Jexali</h2>
+        <p class="muted">Create your listing and reach more customers.</p>
+        <div class="seller-benefits">
+          <span>✓ List your products</span>
+          <span>✓ Reach new customers</span>
+          <span>✓ Grow your business</span>
+        </div>
         <form id="productForm">
-          <label>Product name<input id="pName" required /></label>
-          <label>Price ($)<input id="pPrice" type="number" min="0.01" step="0.01" required /></label>
-<label>Stock<input id="pStock" type="number" min="0" step="1" required /></label>          
-          <label>Category
+          <div class="sell-section-title">
+           <h3>Product Details</h3>
+            <p>Tell customers about your product.</p>
+          </div>
+          <div class="sell-row">
+            <label>Product name
+            <input id="pName" placeholder="Enter product name" required />
+            </label>
+<label>Category
             <select id="pCategory">
               <option>Fashion</option>
               <option>Electronics</option>
@@ -258,8 +268,39 @@ class="fa-solid fa-user-group"></i></div>
               <option>Other</option>
             </select>
           </label>
-          <label>Image URL<input id="pImage" placeholder="https://..." /></label>
-          <label>Description<textarea id="pDesc" rows="4" required></textarea></label>
+          </div>
+          <div class="sell-section-title">
+            <h3>Pricing & Inventory</h3>
+            <p>Set your price, stock, and shipping fee.</p>
+          </div>
+          <div class="pricing-row">
+          <label>Price ($)<input id="pPrice" type="number" min="0.01" step="0.01" required /></label>
+<label>Stock<input id="pStock" type="number" min="0" step="1" required /></label>          
+<label>Shipping fee ($)
+  <input id="pShipping" type="number"
+    min="0" step="0.01" value="0" required />
+</label>
+          </div>
+        <div class="sell-section-title">
+          <h3>Product Photo</h3>
+          <p>Add a photo of your product.</p>
+        </div>
+         <label class="photo-upload">
+           Upload Product Photo
+           <input id="pPhotoUpload" type="file"
+             accept="image/*" />
+         </label>
+          <div class="photo-or">or</div>
+          <label>Image URL
+            <input id="pImage"
+              placeholder="https://..." />
+          </label>
+          <label
+          class="sell-description">Description
+            <textarea id="pDesc" rows="4"
+            placeholder="Write a clear description of your product..."
+              required></textarea>
+          </label>
           <button class="primary" type="submit">Publish Product</button>
         </form>
         <div id="formMsg" class="message"></div>
