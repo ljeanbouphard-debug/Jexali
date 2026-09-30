@@ -765,6 +765,34 @@ font-weight:900;
   order:initial;
  }
 }
+/* Featured Products final heading */
+.featured-heading{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:20px;
+ margin-bottom:22px;
+}
+.featured-heading h2{
+ margin:0;
+ font-size:32px;
+ font-weight:800;
+ color:#0b2948;
+}
+.featured-view-all{
+ border:0;
+ background:transparent;
+ color:#0877e8;
+ font-weight:700;
+ font-size:16px;
+ cursor:pointer;
+ padding:6px 0;
+}
+.featured-view-all:hover{
+ text-decoration:underline;
+}
+
+
 
 
 
