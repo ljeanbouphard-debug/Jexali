@@ -934,9 +934,9 @@ color:#0b2948;
  margin-right:8px;
 }
 #sell .sell-section-title{
- margin:28px 0 16px;
- padding-top:22px;
- border-top:1px solid #e5e7eb;
+ margin:0 0 20px;
+ padding-top:0px;
+ border-top:0;
 }
 #sell .sell-section-title h3{
  margin:0 0 5px;
@@ -985,7 +985,8 @@ color:#0b2948;
  padding:14px 20px;
  margin-top:8px;
  border-radius:10px;
- background:#111827;
+ background:#f3b61f;
+ color:#111827;
  font-weight:800;
 }
 @media(max-width:700px){
@@ -1019,8 +1020,16 @@ color:#0b2948;
   flex-direction:column;
  }
 }
-
-
+#sell .sell-form-card{
+ background:#fff;
+ border:1px solid #e5e7eb;
+ border-radius:18px;
+ padding:24px;
+}
+#sell .sell-form-card
++ .sell-form-card{
+ margin-top:18px;
+}
 
 
 
