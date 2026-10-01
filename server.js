@@ -118,8 +118,7 @@ function uploadToCloudinary(buffer) {
     (error, result) => {
      console.log("Cloudinary callback:",
       error ? error.message : "SUCCESS");           
-     if (error) return
-     reject(error);
+     if (error) return reject(error);
      resolve(result);
     }
     );
