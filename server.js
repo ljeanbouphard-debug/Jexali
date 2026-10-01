@@ -108,6 +108,7 @@ const upload = multer({
 });
 function uploadToCloudinary(buffer) {
  return new Promise((resolve,reject) => {
+  console.log("Starting Cloudinary upload...");
   const stream = 
    cloudinary.uploader.upload_stream(
     {
