@@ -1,9 +1,4 @@
-const seedProducts=[
-{id:"seed1",name:"Wireless Headphones",price:39.99,category:"Electronics",desc:"Comfortable everyday wireless headphones.",image:""},
-{id:"seed2",name:"Classic Sneakers",price:54.99,category:"Fashion",desc:"Clean everyday sneakers.",image:""},
-{id:"seed3",name:"Travel Backpack",price:44.50,category:"Fashion",desc:"Simple backpack for daily use.",image:""}, 
-  {id:"seed4",name:"Smart Watch",price:69.99,stock:0,category:"Electronics",desc:"Modern smart watch with a clean everyday design.",image:""},  
-  ];
+
 
 let customProducts=[];
 
@@ -12,8 +7,7 @@ let sales=Number(localStorage.getItem("jexaliSales")||0);
 let sellerRevenue=Number(localStorage.getItem("jexaliSellerRevenue")||0);
 let jexaliRevenue=Number(localStorage.getItem("jexaliRevenue")||0);
 
-const allProducts=()=>[...seedProducts,...
-customProducts];
+const allProducts=()=>[...customProducts];
 fetch('/api/products')
 .then(res=>res.json())
 .then(products=>{
