@@ -83,6 +83,22 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
   const stock=Number(document.getElementById("pStock").value);
   const category=document.getElementById("pCategory").value;
   let image=document.getElementById("pImage").value.trim();
+  const file = photoUpload.files[0];
+  if (file) {
+    const formData = new FormData();
+    formData.append("image", file);
+    const uploadResponse = await fetch("/api/upload-product-image", {
+      method: "POST",
+      body: formData
+    });
+    if (!uploadResponse.ok) {
+      alert("Image upload failed");
+      return;
+    }
+    const uploadData = await
+    uploadResponse.json();
+    image= uploadData.url;
+  }
   const desc=document.getElementById("pDesc").value.trim();
 if(!name || !desc || !(price>0) || ! Number.isInteger(stock) || stock<0){document.getElementById("formMsg").textContent="Please complete all required fields.";return;}
   
@@ -106,6 +122,7 @@ if (!response.ok) { const err=await response.json(); alert(err.error || "Product
   customProducts.unshift(p);
   localStorage.setItem("jexaliProducts",JSON.stringify(customProducts));
   e.target.reset();
+  photoFileName.textContent = "No file selected";
   document.getElementById("formMsg").textContent="Product published successfully.";
   setTimeout(()=>go("dashboard"),500);
 });
