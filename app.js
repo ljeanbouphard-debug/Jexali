@@ -12,7 +12,8 @@ let sales=Number(localStorage.getItem("jexaliSales")||0);
 let sellerRevenue=Number(localStorage.getItem("jexaliSellerRevenue")||0);
 let jexaliRevenue=Number(localStorage.getItem("jexaliRevenue")||0);
 
-const allProducts=()=>[...customProducts];
+const allProducts=()=>[...seedProducts,...
+customProducts];
 fetch('/api/products')
 .then(res=>res.json())
 .then(products=>{
