@@ -4,6 +4,16 @@ const cors = require('cors')
 const express = require('express');
 const session = require("express-session");
 const bcrypt = require("bcryptjs");
+const cloudinary = require("cloudinary") .v2;
+const multer = require("multer");
+cloudinary.config({
+ cloud_name:
+  process.env.CLOUDINARY_CLOUD_NAME,
+ api_key:
+  process.env.CLOUDINARY_API_KEY,
+api_secret:
+ process.env.CLOUDINARY_API_SECRET
+});
 const stripe = require('stripe') (process.env.STRIPE_SECRET_KEY);
 const stripeTest = require('stripe') (process.env.STRIPE_TEST_SECRET_KEY);
 
@@ -82,7 +92,65 @@ app.post("/api/register", async (req, res)=> {try {const { name, email, password
 app.use(session({ 
  store: new PgSessionStore(db), 
 secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false, cookie: {httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxeAge: 30 * 24 * 60 * 60 * 1000}}));
-
+const upload = multer({
+ storage: multer.memoryStorage(),
+ limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+   const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+   if
+    (allowedTypes.includes(file.mimetype)
+     ) {
+     cb(null, true);
+    } else {
+     cb(new Error("Only JPG, PNG, and WEBP images are allowed"));
+    }
+  }
+});
+function uploadToCloudinary(buffer) {
+ return new Promise((resolve,reject) => {
+  const stream = 
+   cloudinary.uploader.upload_stream(
+    {
+     folder: "jexali/products",
+     resource_type: "image"
+    },
+    (error, result) => {
+     if (error) return
+     reject(error);
+     resolve(result);
+    }
+    );
+  stream.end(buffer);
+ });
+}
+app.post(
+ "/api/upload-product-image",
+ (req, res, next) => {
+  if (!req.session.sellerId) {
+   return
+   res.status(401).json({ error: "Not signed in" });
+  }
+  next();
+ },
+ upload.single("image"),
+ async ( req, res) => {
+  try {
+   if (!req.file) {
+    return
+    res.status(400).json({ error: "No image selected" });
+   }
+   const result = await 
+   uploadToCloudinary(req.file.buffer);
+   res.json({
+    url: result.secure_url
+   });
+  } catch (err) {
+   console.error(err);
+   res.status(500).json({ error:
+    "Image upload failed" });
+  }
+ }
+ );
 app.post("/api/login", async (req, res) => {
  try { const { email, password } = req.body; if (!email || !password) { return res.status(400).json({ error: "Email and password are required" }); } const normalizedEmail = email.trim().toLowerCase(); const result = await db.query("SELECT id, name, email, password_hash, role FROM users WHERE email = $1", [normalizedEmail]); const user = result.rows[0]; if (!user || !(await bcrypt.compare(password, user.password_hash))) { return res.status(401).json({ error:"Invalid email or password" }); } req.session.user = { id: user.id, name: user.name, email: user.email, role: user.role };
 const sellerResult = await db.query("SELECT id FROM sellers WHERE user_id = $1", [user.id]);
