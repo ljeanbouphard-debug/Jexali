@@ -82,7 +82,7 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
   const price=Number(document.getElementById("pPrice").value);
   const stock=Number(document.getElementById("pStock").value);
   const category=document.getElementById("pCategory").value;
-  const image=document.getElementById("pImage").value.trim();
+  let image=document.getElementById("pImage").value.trim();
   const desc=document.getElementById("pDesc").value.trim();
 if(!name || !desc || !(price>0) || ! Number.isInteger(stock) || stock<0){document.getElementById("formMsg").textContent="Please complete all required fields.";return;}
   
