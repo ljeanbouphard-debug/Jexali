@@ -304,17 +304,37 @@ class="fa-solid fa-user-group"></i></div>
             Product Photo</h3>
           <p>Add a photo of your product.</p>
         </div>
-         <label class="photo-upload">
-           <i class="fa-solid fa-cloud-arrow-up"></i>
-           Upload Product Photo
-           <input id="pPhotoUpload" type="file"
-             accept="image/*" />
+         <div class="product-photo-options">
+           <label class="photo-upload"
+             for="pPhotoUpload">
+             <i class="fa-solid fa-cloud-arrow-up"></i>
+             <span class="photo-upload-text">
+               <strong>Choose Product Photo</strong>
+               <small>JPG, PNG or WEBP</small>
+             </span>
+             <input
+               id="pPhotoUpload"
+               type="file"
+               accept="image/jpeg,image/png,image/webp"
+               />
+           </label>
+           <div id="photoFileName"
+             class="photo-file-name">
+             No file selected
+           </div>
+           <div class="photo-or">
+             <span>OR</span>
+           </div>
+         <label class="image-url-field">
+           <span>Image URL</span>
+           <input
+             id="pImage"
+             type="url"
+             placeholder="https://example.com/products.jpg"
+             />
+           <small>Use a direct image URL if you don't want to upload a file.</small>
          </label>
-          <div class="photo-or">or</div>
-          <label>Image URL
-            <input id="pImage"
-              placeholder="https://..." />
-          </label>
+         </div>
           </div>
           <button class="primary" type="submit">Publish Product</button>
         </form>
