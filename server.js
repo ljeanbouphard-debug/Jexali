@@ -116,6 +116,8 @@ function uploadToCloudinary(buffer) {
      resource_type: "image"
     },
     (error, result) => {
+     console.log("Cloudinary callback:",
+      error ? error.message : "SUCCESS");           
      if (error) return
      reject(error);
      resolve(result);
