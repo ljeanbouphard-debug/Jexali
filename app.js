@@ -92,7 +92,9 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
       body: formData
     });
     if (!uploadResponse.ok) {
-      alert("Image upload failed");
+      const err = await 
+      uploadResponse.json();
+      alert(err.error || "Image upload failed")
       return;
     }
     const uploadData = await
