@@ -1083,6 +1083,126 @@ color:#0b2948;
  border-radius:50%;
  margin:0 auto 12px;
 }
+/* JEXALI PRODUCT photo FINAL DESIGN */
+#sell .product-photo-options{
+ display:grid;
+ gap:14px;
+}
+#sell .photo-upload{
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ justify-content:center;
+ min-height:190px;
+ padding:28px 22px;
+ border-radius:16px;
+ background:#f9fafb;
+ text-align:center;
+ cursor:pointer;
+ transition:border-color .2s ease,
+  background .2s ease,
+ transform .2s ease;
+}
+#sell .photo-upload:hover{
+ border-color:#f3b61f;
+ background:#fffaf0;
+ transform:translateY(-1px);
+}
+#sell .photo-upload > i{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ width:54px;
+ height:54px;
+ margin:0 0 13px;
+ border-radius:50%;
+ background:#fff3cd;
+ color:#d99500;
+ font-size:24px;
+}
+#sell .photo-upload-text{
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ gap:5px;
+}
+#sell .photo-upload-text strong{
+ color:#111827;
+ font-size:16px;
+}
+#sell .photo-upload-text small{
+ color:#667085;
+ font-size:12px;
+ font-weight:500;
+}
+ #sell #pPhotoUpload{
+  position:absolute;
+  width:1px;
+  height:1px;
+  opacity:0;
+  overflow:hidden;
+  pointer-events:none;
+ }
+#sell .photo-file-name{
+ padding:10px 14px;
+ border:1px solid #e5e7eb;
+ border-radius:10px;
+ background:#fff;
+ color:#667085;
+ font-size:13px;
+ text-align:center;
+}
+#sell .photo-or{
+ display:flex;
+ align-items:center;
+ gap:12px;
+ margin:2px 0;
+ color:#98a2b3;
+ font-size:12px;
+ font-weight:800;
+}
+#sell .photo-or::before,
+#sell .photo-or::after{
+ content:"";
+ flex:1;
+ height:1px;
+ background:#e5e7eb;
+}
+#sell .image-url-field{
+ display:grid;
+ gap:8px;
+}
+#sell .image-url-field > span{
+ color:#344054;
+ font-weight:700;
+}
+#sell .image-url-field small{
+ color:#667085;
+ font-size:12px;
+ font-weight:500;
+}
+#sell .image-url-field input{
+ width:100%;
+ padding:13px 14px;
+ border:1px solid #d0d5dd;
+ border-radius:10px;
+ background:#fff;
+ outline:none;
+}
+#sell .image-url-field input:focus{
+ border-color:#f3b61f;
+ box-shadow:0 0 0 3px
+ rgba(243,182,31,.12);
+}
+
+
+
+
+
+
+
+
+
 
 
 
