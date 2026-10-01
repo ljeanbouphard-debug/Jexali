@@ -63,6 +63,17 @@ function addToCart(id){
 
 function updateCartCount(){document.getElementById("cartCount").textContent=cart.length;}
 
+const photoUpload = document .getElementById("pPhotoUpload");
+const photoFileName = document .getElementById("photoFileName");
+photoUpload.addEventListener("change" , () => {
+  const file = photoUpload.files[0];
+  if (file) {
+    photoFileName.textContent = file.name;
+  } else {
+    photoFileName.textContent = "No file selected";
+  }
+});
+
 document.getElementById("productForm").addEventListener("submit",async e=>{
   e.preventDefault();
   
