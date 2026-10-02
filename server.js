@@ -273,12 +273,12 @@ quantity:(cart.find(c =>
  (Number(cart.find(c =>
   String(c.id).replace(/^p/,"")===
   String(item.id))?.quantity || 1)
-     , 0) * 0.10),
+     , 0) * 0.10)),
  transfer_data: {
   destination: sellerStripeId
  }
 }
-                     } : {}),
+  } : {}),
                                                                            
 success_url:'https://jexali.onrender.com/?success=1&session_id={CHECKOUT_SESSION_ID}',
 cancel_url:'https://jexali.onrender.com/?canceled=1',
