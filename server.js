@@ -91,7 +91,7 @@ app.post("/api/register", async (req, res)=> {try {const { name, email, password
 
 app.use(session({ 
  store: new PgSessionStore(db), 
-secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false, cookie: {httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxeAge: 30 * 24 * 60 * 60 * 1000}}));
+secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false, cookie: {httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 30 * 24 * 60 * 60 * 1000}}));
 const upload = multer({
  storage: multer.memoryStorage(),
  limits: { fileSize: 5 * 1024 * 1024 },
@@ -176,7 +176,7 @@ app.get('/api/key-length', (req, res) => {
  res.json({ length:
   process.env.STRIPE_SECRET_KEY ?
   process.env.STRIPE_SECRET_KEY.length :
-  O });
+  0 });
 });
 app.get('/api/test-key-info', (req,res)=> {const key = process.env.STRIPE_TEST_SECRET_KEY || ''; res.json({exists: !!key, length: key.length,startsWithSkTest: key.startsWith('sk_test_'),hasWhitespace: /\s/.test(key),lastCharCode: key.length ? key.charCodeAt(key.length - 1) : null });});
 
@@ -228,7 +228,7 @@ cart.length===0)
  const dbProducts = (await db.query('SELECT * FROM products WHERE id = ANY($1::int[])',[productIds])).rows;
 
 
- if (dbProducts.length !== productIds.length) { return res.status(400).json({eror:'Invalid product in cart'});}
+ if (dbProducts.length !== productIds.length) { return res.status(400).json({error:'Invalid product in cart'});}
  const outOfStock = dbProducts.find(p => (cart.find(c => String(c.id).replace(/^p/,"") ===String(p.id))?.quantity || 1) > p.stock);
 if (outOfStock) return res.status(400).json({error:'Not enough stock'}); 
 const sellerIds = dbProducts.map(product => product.seller_id);
@@ -238,12 +238,15 @@ if (!allSameSellerId || !sellerIds[0]) return res.status(400).json({error:'Produ
 const sellerResult = await db.query('SELECT stripe_account_id FROM sellers WHERE id = $1', [sellerIds[0]]);
 if (sellerResult.rows.length === 0) return res.status(400).json({error:'Seller not found'});
 const sellerStripeId = sellerResult.rows[0].stripe_account_id;
- 
+ const shippingTotal = dbProducts.reduce(
+  (sum, item) => sum + Number(item.shipping_fee || 0), 0 );
 const session = await stripe.checkout.sessions.create({
 mode:'payment',
- metadata: { seller_id: String(sellerIds[0]) },
+ metadata: { seller_id: String(sellerIds[0]),
+  shipping_total_cents:
+   String(Math.round(shippingTotal * 100)) },
 branding_settings: { display_name:' Jexali ' },
-line_items: dbProducts.map(item=>({
+line_items:[... dbProducts.map(item=>({
 price_data:{
 currency:'usd',
 product_data:{
@@ -252,12 +255,24 @@ metadata:{product_id:String(item.id)},
 },
 unit_amount:Math.round(item.price*100),
 },
-quantity:(cart.find(c => c.id === item.id)?.quantity || 1),
+quantity:(cart.find(c =>
+ String(c.id).replace(/^p/,"") ===
+ String(item.id))?.quantity || 1),
 })),
+ ...(shippingTotal > 0 ? [{
+  price_data: {
+   currency: 'usd',
+   product_data: { name: 'Shipping' },
+    unit_amount:
+    Math.round(shippingTotal * 100), },
+    quantity: 1,                               
+    }] : [])],                                                                  
 ...(sellerStripeId ? {payment_intent_data:
 {application_fee_amount: Math.round(dbProducts.reduce((sum, item)=>
  sum + Math.round(item.price * 100)
- * (cart.find(c => c.id === item.id)?.quantity || 1), 0
+ * (cart.find(c =>
+  String(c.id).replace(/^p/,"")===
+  String(item.id))?.quantity || 1)
         ) * 0.10
        ),
  transfer_data: {
@@ -266,7 +281,7 @@ quantity:(cart.find(c => c.id === item.id)?.quantity || 1),
 }
                      } : {}),
                                                                            
-success_url:'https://jexali.onrender.com/?success=1& session_id={CHECKOUT_SESSION_ID}',
+success_url:'https://jexali.onrender.com/?success=1&session_id={CHECKOUT_SESSION_ID}',
 cancel_url:'https://jexali.onrender.com/?canceled=1',
 });
  
@@ -276,17 +291,18 @@ app.get('/api/checkout/verify', async (req,res)=>{
  const sessionId = String(req.query.session_id || '');
  if (!sessionId) return res.status(400).json({error:'Missing session id'});
  const session = await stripe.checkout.sessions.retrieve(sessionId);
- if (sessions.payment_status !== 'paid') return res.status(400).json({error:'Payment not completed'});
+ if (session.payment_status !== 'paid') return res.status(400).json({error:'Payment not completed'});
  const sellerId = Number(session.metadata?.seller_id);
  if (!Number.isInteger(sellerId)) return res.status(400).json({error:'Invalid seller'});
  const amount = Number(session.amount_total || 0) / 100;
- const jexaliFee = amount * 0.10;
+ const shippingAmount = Number(session.metadata?.shipping_total_cents || 0) / 100;
+ const jexaliFee = (amount - shippingAmount) * 0.10;
  const sellerEarnings = amount - jexaliFee;
 await db.query( 
  'INSERT INTO orders (stripe_session_id, seller_id, amount, seller_earnings, jexali_fee) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (stripe_session_id) DO NOTHING',
  [session.id, sellerId, amount, sellerEarnings, jexaliFee]
  );
- res.json({ok:true, sales:1, sellerEarning, jexaliFee});
+ res.json({ok:true, sales:1, sellerEarnings, jexaliFee});
 });
 app.get('/api/seller/stats', async (req,res)=>{
 if (!req.session.sellerId) return res.status(401).json({error:'Not signed in'}); const sellerId = Number(req.session.sellerId); 
