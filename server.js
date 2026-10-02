@@ -216,7 +216,7 @@ db.query("CREATE TABLE IF NOT EXISTS orders (id SERIAL PRIMARY KEY, stripe_sessi
 db.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS seller_id INTEGER");
 app.post('/api/products', async (req,res)=>{
 const p = req.body
- if (p.image && /^https?:\/\//i.test(p.image)) {
+ if (p.image && /^https?:\/\//i.test(p.image) && ! p.image.includes("res.cloudinary.com/")) {
   try {
    p.image = await
    uploadUrlToCloudinary(p.image);
