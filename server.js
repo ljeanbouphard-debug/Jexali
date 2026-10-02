@@ -253,7 +253,7 @@ product_data:{
 name:item.name,
 metadata:{product_id:String(item.id)}, 
 },
-unit_amount:Math.round(item.price*100),
+unit_amount:Math.round(Number(item.price)*100),
 },
 quantity:(cart.find(c =>
  String(c.id).replace(/^p/,"") ===
