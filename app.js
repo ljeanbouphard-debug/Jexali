@@ -77,6 +77,7 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
   const name=document.getElementById("pName").value.trim();
   const price=Number(document.getElementById("pPrice").value);
   const stock=Number(document.getElementById("pStock").value);
+  const shippingFee=Number(document.getElementById("pShipping").value) || 0;
   const category=document.getElementById("pCategory").value;
   let image=document.getElementById("pImage").value.trim();
   const file = photoUpload.files[0];
@@ -100,7 +101,7 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
   const desc=document.getElementById("pDesc").value.trim();
 if(!name || !desc || !(price>0) || ! Number.isInteger(stock) || stock<0){document.getElementById("formMsg").textContent="Please complete all required fields.";return;}
   
-  const p={id:"p"+Date.now(),name,price,stock,category,image,desc,};
+  const p={id:"p"+Date.now(),name,price,stock,shipping_fee:shippingFee,category,image,desc,};
   const response=await fetch("/api/products",{
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -110,6 +111,7 @@ if(!name || !desc || !(price>0) || ! Number.isInteger(stock) || stock<0){documen
           price:price,
         
         stock:stock,
+        shipping_fee: shippingFee,
         category: category,
         image: image,
         description: desc
