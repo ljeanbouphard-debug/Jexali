@@ -269,12 +269,11 @@ quantity:(cart.find(c =>
     }] : [])],                                                                  
 ...(sellerStripeId ? {payment_intent_data:
 {application_fee_amount: Math.round(dbProducts.reduce((sum, item)=>
- sum + Math.round(item.price * 100)
- * (cart.find(c =>
+ sum + Number(item.price) * 100 *
+ (Number(cart.find(c =>
   String(c.id).replace(/^p/,"")===
   String(item.id))?.quantity || 1)
-        ) * 0.10
-       ),
+     , 0) * 0.10),
  transfer_data: {
   destination: sellerStripeId
  }
