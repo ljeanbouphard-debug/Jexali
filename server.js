@@ -125,6 +125,16 @@ function uploadToCloudinary(buffer) {
   stream.end(buffer);
  });
 }
+async function
+ uploadUrlToCloudinary(imageUrl) {
+  const result = await
+   cloudinary.uploader.upload(imageUrl,
+  {
+   folder: "jexali/products",
+   resource_type: "image"
+  });
+  return result.secure_url;
+ }
 app.post(
  "/api/upload-product-image",
  (req, res, next) => {
@@ -206,6 +216,15 @@ db.query("CREATE TABLE IF NOT EXISTS orders (id SERIAL PRIMARY KEY, stripe_sessi
 db.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS seller_id INTEGER");
 app.post('/api/products', async (req,res)=>{
 const p = req.body
+ if (p.image && /^https?:\/\//i.test(p.image)) {
+  try {
+   p.image = await
+   uploadUrlToCloudinary(p.image);
+  } catch (err) {
+   console.error("Image URL upload failed:", err.message); return
+   res.status(400).json({ error: "Could not save product image" });
+  }
+ }
  if (!req.session.sellerId) return res.status(401).json({error:'Not signed in'});
 const sellerRow = { id:Number(req.session.sellerId) };
  const r = await db.query('INSERT INTO products (name, price,seller, seller_id, stock, category, image, description, shipping_fee) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id', [p.name, p.price, p.seller, sellerRow?.id, p.stock || 0, p.category, p.image, p.description,
