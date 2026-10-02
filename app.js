@@ -197,7 +197,16 @@ updateCartCount();
 renderShop();
 
 const params=new URLSearchParams(window.location.search);
-if(params.get("success")==="1")alert("Thank you for your purchase!");
+if(params.get("success")==="1"){
+ const sessionId=params.get("session_id");
+  if(sessionId){
+    fetch("/api/checkout/verify?session_id="+encodeURIComponent(sessionId))
+      .then(res=>res.json())
+    .then(data=>{
+      if(data.ok) alert("Thank you for your purchase!");
+    });
+  }
+}
 if(params.get("canceled")==="1")alert("Payment canceled.");
 
 let stripeConnected=false;
