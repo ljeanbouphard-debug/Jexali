@@ -190,7 +190,7 @@ app.get('/api/stripe-test', async (req,res) => {
 });
 db.query("CREATE TABLE IF NOT EXISTS products (id SERIAL PRIMARY KEY, name TEXT, price REAL, seller TEXT, stock INTEGER DEFAULT 0)");
 db.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS category TEXT, ADD COLUMN IF NOT EXISTS image TEXT, ADD COLUMN IF NOT EXISTS description TEXT");
-
+db.query("Alter TABLE products ADD COLUMN IF NOT EXISTS shipping_fee REAL DEFAULT 0");
 app.get('/api/products', async (req,res)=>{
 const products = (await db.query('SELECT * FROM products')).rows;
 res.json(products);
@@ -208,7 +208,9 @@ app.post('/api/products', async (req,res)=>{
 const p = req.body
  if (!req.session.sellerId) return res.status(401).json({error:'Not signed in'});
 const sellerRow = { id:Number(req.session.sellerId) };
- const r = await db.query('INSERT INTO products (name, price,seller, seller_id, stock, category, image, description) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id', [p.name, p.price, p.seller, sellerRow?.id, p.stock || 0, p.category, p.image, p.description]);
+ const r = await db.query('INSERT INTO products (name, price,seller, seller_id, stock, category, image, description, shipping_fee) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id', [p.name, p.price, p.seller, sellerRow?.id, p.stock || 0, p.category, p.image, p.description,
+Number(p.shipping_fee) || 0]
+);                          
  const newID = r.rows[0].id;
 res.status(201).json({id:newID});
 });
