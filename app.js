@@ -29,7 +29,7 @@ document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",(
 
 function cardHTML(p, seller=false){
   return `<article class="card">
-    ${p.image?`<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}">`:`<div class="placeholder">🛍️</div>`}
+    ${p.image?`<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" class="product-image-clickable">`:`<div class="placeholder">🛍️</div>`}
     <div class="card-body">
       <div class="category">${escapeHtml(p.category)}</div>
       <h3>${escapeHtml(p.name)}</h3>
@@ -40,7 +40,9 @@ function cardHTML(p, seller=false){
   </article>`;
 }
 function escapeHtml(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
-
+document.addEventListener("click", e => {
+  if (e.target.classList.contains("product-image-clickable")) {
+    window.open(e.target.src,"_blank"); } });
 function renderShop(){
   const q=document.getElementById("searchInput").value.toLowerCase().trim();
   const items=allProducts().filter(p=>(p.name+" "+p.category+" "+p.desc).toLowerCase().includes(q));
