@@ -240,6 +240,12 @@ if (sellerResult.rows.length === 0) return res.status(400).json({error:'Seller n
 const sellerStripeId = sellerResult.rows[0].stripe_account_id;
  const shippingTotal = dbProducts.reduce(
   (sum, item) => sum + Number(item.shipping_fee || 0), 0 );
+ const productSubtotalCents = dbProducts.reduce((sum, item) => {
+  const qty = Number(cart.find(c =>
+   String(c.id).replace(/^p/,"") === String(item.id)
+   )?.quantity || 1);
+  return sum + Math.round(Number(item.price) * 100) * qty;
+ }, 0);
 const session = await stripe.checkout.sessions.create({
 mode:'payment',
  metadata: { seller_id: String(sellerIds[0]),
@@ -268,12 +274,7 @@ quantity:(cart.find(c =>
     quantity: 1,                               
     }] : [])],                                                                  
 ...(sellerStripeId ? {payment_intent_data:
-{application_fee_amount: Math.round(dbProducts.reduce((sum, item)=>
- sum + Number(item.price) * 100 *
- (Number(cart.find(c =>
-  String(c.id).replace(/^p/,"")===
-  String(item.id))?.quantity || 1)
-     , 0) * 0.10)),
+{application_fee_amount: Math.round(productSubtotalCents * 0.10),
  transfer_data: {
   destination: sellerStripeId
  }
