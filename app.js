@@ -45,9 +45,61 @@ function cardHTML(p, seller=false){
   </article>`;
 }
 function escapeHtml(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
+let activeProduct = null;
+
+function openProductModal(id){
+  const p = allProducts().find(
+    product => String(product.id) === String(id)
+  );
+
+  if(!p) return;
+
+  activeProduct = p;
+
+  document.getElementById("modalProductImage").src =
+    p.image || "";
+
+  document.getElementById("modalProductName").textContent =
+    p.name || "";
+
+  document.getElementById("modalProductCategory").textContent =
+    p.category || "";
+
+  document.getElementById("modalProductDescription").textContent =
+    p.desc || p.description || "";
+
+  document.getElementById("modalProductPrice").textContent =
+    money(p.price);
+
+  document.getElementById("productModal")
+    .classList.add("open");
+}
+
 document.addEventListener("click", e => {
-  if (e.target.classList.contains("product-image-clickable")) {
-    window.open(e.target.src,"_blank"); } });
+  if(e.target.classList.contains("product-image-clickable")){
+    const card = e.target.closest(".card");
+
+    if(card){
+      openProductModal(card.dataset.productId);
+    }
+  }
+});
+
+document.getElementById("closeProductModal")
+  .addEventListener("click", () => {
+    document.getElementById("productModal")
+      .classList.remove("open");
+
+    activeProduct = null;
+  });
+
+document.querySelector(".product-modal-overlay")
+  .addEventListener("click", () => {
+    document.getElementById("productModal")
+      .classList.remove("open");
+
+    activeProduct = null;
+  });
 function renderShop(){
   const q=document.getElementById("searchInput").value.toLowerCase().trim();
   const items=allProducts().filter(p=>(p.name+" "+p.category+" "+p.desc).toLowerCase().includes(q));
