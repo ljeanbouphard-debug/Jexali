@@ -28,14 +28,19 @@ function go(view){
 document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.view)));
 
 function cardHTML(p, seller=false){
-  return `<article class="card">
+  return `<article class="card" data-product-id="${p.id}">
     ${p.image?`<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" class="product-image-clickable">`:`<div class="placeholder">🛍️</div>`}
     <div class="card-body">
       <div class="category">${escapeHtml(p.category)}</div>
       <h3>${escapeHtml(p.name)}</h3>
       <p>${escapeHtml(p.desc)}</p>
       <div class="price">${money(p.price)}</div>
-     ${seller ? `<button class="secondary remove-product" data-id="${p.id}">Remove listing</button>` : Number(p.stock) <= 0 ? `<button class="primary" disabled>Out of Stock</button>` : `<button class="primary add-cart" data-id="${p.id}">Add to Cart</button>`} 
+      ${seller
+        ? `<button class="secondary remove-product" data-id="${p.id}">Remove listing</button>`
+        : Number(p.stock) <= 0
+          ? `<button class="primary" disabled>Out of Stock</button>`
+          : `<button class="primary add-cart" data-id="${p.id}">Add to Cart</button>`
+      }
     </div>
   </article>`;
 }
