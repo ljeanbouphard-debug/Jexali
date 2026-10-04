@@ -1473,7 +1473,50 @@ color:#0b2948;
     right:10px;
   }
 }
+/* ===== SELLER SIZE BUTTONS ===== */
 
+.seller-size-options{
+  display:flex;
+  flex-wrap:wrap;
+  gap:9px;
+  margin-top:4px;
+}
+
+.seller-size-options label{
+  position:relative;
+  cursor:pointer;
+}
+
+.seller-size-options input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+
+.seller-size-options label span{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:48px;
+  padding:10px 13px;
+  border:1px solid #d1d5db;
+  border-radius:10px;
+  background:#fff;
+  color:#374151;
+  font-weight:700;
+  transition:.2s ease;
+}
+
+.seller-size-options label:hover span{
+  border-color:#f97316;
+}
+
+.seller-size-options input:checked + span{
+  background:#f97316;
+  border-color:#f97316;
+  color:#fff;
+  box-shadow:0 4px 12px rgba(249,115,22,.22);
+}
 
 
 
