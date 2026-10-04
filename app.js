@@ -161,17 +161,101 @@ function renderShop(){
   document.querySelectorAll(".add-cart").forEach(b=>b.addEventListener("click",()=>addToCart(b.dataset.id)));
 }
 document.getElementById("searchInput").addEventListener("input",renderShop);
+function getSelectedProductOptions(){
+  const getSelected = (listId) => {
+    const selected = document.querySelector(
+      `#${listId} .product-option-btn.selected`
+    );
 
-function addToCart(id){
-  const p=allProducts().find(x=>String(x.id)===String(id));
+    return selected ? selected.dataset.value : "";
+  };
+
+  return {
+    color: getSelected("modalColors"),
+    clothingSize: getSelected("modalClothingSizes"),
+    shoeSize: getSelected("modalShoeSizes"),
+    waistSize: getSelected("modalWaistSizes")
+  };
+}
+function addToCart(id, options = {}){
+  const p = allProducts().find(
+    x => String(x.id) === String(id)
+  );
+
   if(!p) return;
-  cart.push({...p,cartId:Date.now()+Math.random()});
-  localStorage.setItem("jexaliCart",JSON.stringify(cart));
+
+  cart.push({
+    ...p,
+    selectedColor: options.color || "",
+    selectedClothingSize: options.clothingSize || "",
+    selectedShoeSize: options.shoeSize || "",
+    selectedWaistSize: options.waistSize || "",
+    cartId: Date.now() + Math.random()
+  });
+
+  localStorage.setItem(
+    "jexaliCart",
+    JSON.stringify(cart)
+  );
+
   updateCartCount();
 }
+  
+
 
 function updateCartCount(){document.getElementById("cartCount").textContent=cart.length;}
+const modalAddToCartBtn = document.getElementById("modalAddToCart");
 
+if(modalAddToCartBtn){
+  modalAddToCartBtn.addEventListener("click", () => {
+    if(!activeProduct) return;
+
+    const options = getSelectedProductOptions();
+
+    if(
+      Array.isArray(activeProduct.colors) &&
+      activeProduct.colors.length > 0 &&
+      !options.color
+    ){
+      alert("Please choose a color.");
+      return;
+    }
+
+    if(
+      Array.isArray(activeProduct.clothing_sizes) &&
+      activeProduct.clothing_sizes.length > 0 &&
+      !options.clothingSize
+    ){
+      alert("Please choose a size.");
+      return;
+    }
+
+    if(
+      Array.isArray(activeProduct.shoe_sizes) &&
+      activeProduct.shoe_sizes.length > 0 &&
+      !options.shoeSize
+    ){
+      alert("Please choose a shoe size.");
+      return;
+    }
+
+    if(
+      Array.isArray(activeProduct.waist_sizes) &&
+      activeProduct.waist_sizes.length > 0 &&
+      !options.waistSize
+    ){
+      alert("Please choose a waist size.");
+      return;
+    }
+
+    addToCart(activeProduct.id, options);
+
+    document.getElementById("productModal")
+      .classList.remove("open");
+
+    activeProduct = null;
+  });
+}
 const photoUpload = document .getElementById("pPhotoUpload");
 const photoFileName = document .getElementById("photoFileName");
 photoUpload.addEventListener("change" , () => {
@@ -305,7 +389,41 @@ document.querySelectorAll(".remove-product").forEach(b=>b.onclick=async()=>{cons
 
 function renderCart(){
   const box=document.getElementById("cartItems");
-  box.innerHTML=cart.length?cart.map((p,i)=>`<div class="cart-row"><div><strong>${escapeHtml(p.name)}</strong><div class="muted">${money(p.price)}</div></div><button data-i="${i}" class="remove-cart">Remove</button></div>`).join(""):"<p>Your cart is empty.</p>";
+  box.innerHTML = cart.length
+  ? cart.map((p,i) => `
+      <div class="cart-row">
+        <div>
+          <strong>${escapeHtml(p.name)}</strong>
+
+          ${p.selectedColor
+            ? `<div class="muted">Color: ${escapeHtml(p.selectedColor)}</div>`
+            : ""
+          }
+
+          ${p.selectedClothingSize
+            ? `<div class="muted">Size: ${escapeHtml(p.selectedClothingSize)}</div>`
+            : ""
+          }
+
+          ${p.selectedShoeSize
+            ? `<div class="muted">Shoe Size: ${escapeHtml(p.selectedShoeSize)}</div>`
+            : ""
+          }
+
+          ${p.selectedWaistSize
+            ? `<div class="muted">Waist Size: ${escapeHtml(p.selectedWaistSize)}</div>`
+            : ""
+          }
+
+          <div class="muted">${money(p.price)}</div>
+        </div>
+
+        <button data-i="${i}" class="remove-cart">
+          Remove
+        </button>
+      </div>
+    `).join("")
+  : "<p>Your cart is empty.</p>";
   
   const
   subtotal=cart.reduce((s,p)=>s+Number(
