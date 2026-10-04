@@ -198,8 +198,10 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
   .filter(Boolean);
 
 const clothingSizes = Array.from(
-  document.getElementById("pClothingSizes").selectedOptions
-).map(option => option.value);
+  document.querySelectorAll(
+    "#pClothingSizes input[type='checkbox']:checked"
+  )
+).map(input => input.value);
 
 const shoeSizes = Array.from(
   document.getElementById("pShoeSizes").selectedOptions
