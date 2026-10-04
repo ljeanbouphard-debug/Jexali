@@ -546,7 +546,106 @@ class="fa-solid fa-user-group"></i></div>
   </div>
   </section>
   </main>
+<!-- Product Details Modal -->
+<div id="productModal" class="product-modal">
+  <div class="product-modal-overlay"></div>
 
+  <div class="product-modal-card">
+    <button
+      id="closeProductModal"
+      class="product-modal-close"
+      type="button"
+      aria-label="Close product details"
+    >
+      &times;
+    </button>
+
+    <div class="product-modal-grid">
+
+      <div class="product-modal-image-wrap">
+        <img
+          id="modalProductImage"
+          src=""
+          alt="Product"
+        />
+      </div>
+
+      <div class="product-modal-info">
+        <p
+          id="modalProductCategory"
+          class="product-modal-category">
+        </p>
+
+        <h2 id="modalProductName"></h2>
+
+        <p
+          id="modalProductDescription"
+          class="product-modal-description">
+        </p>
+
+        <div
+          id="modalProductPrice"
+          class="product-modal-price">
+        </div>
+
+        <div
+          id="modalColorGroup"
+          class="product-option-group">
+          <h4>Choose Color</h4>
+          <div
+            id="modalColors"
+            class="product-option-list">
+          </div>
+        </div>
+
+        <div
+          id="modalClothingSizeGroup"
+          class="product-option-group">
+          <h4>Choose Size</h4>
+          <div
+            id="modalClothingSizes"
+            class="product-option-list">
+          </div>
+        </div>
+
+        <div
+          id="modalShoeSizeGroup"
+          class="product-option-group">
+          <h4>Choose Shoe Size</h4>
+          <div
+            id="modalShoeSizes"
+            class="product-option-list">
+          </div>
+        </div>
+
+        <div
+          id="modalWaistSizeGroup"
+          class="product-option-group">
+          <h4>Choose Waist Size</h4>
+          <div
+            id="modalWaistSizes"
+            class="product-option-list">
+          </div>
+        </div>
+
+        <p
+          id="modalOptionMessage"
+          class="product-option-message">
+        </p>
+
+        <button
+          id="modalAddToCart"
+          class="primary product-modal-cart"
+          type="button"
+        >
+          <i class="fa-solid fa-cart-shopping"></i>
+          Add to Cart
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
   <footer>© 2026 Jexali — Buy. Sell. Discover.</footer>
   <script src="app.js"></script>
 <script>
