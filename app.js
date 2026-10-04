@@ -86,6 +86,22 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
   const stock=Number(document.getElementById("pStock").value);
   const shippingFee=Number(document.getElementById("pShipping").value) || 0;
   const category=document.getElementById("pCategory").value;
+  const colors = document.getElementById("pColors").value
+  .split(",")
+  .map(color => color.trim())
+  .filter(Boolean);
+
+const clothingSizes = Array.from(
+  document.getElementById("pClothingSizes").selectedOptions
+).map(option => option.value);
+
+const shoeSizes = Array.from(
+  document.getElementById("pShoeSizes").selectedOptions
+).map(option => option.value);
+
+const waistSizes = Array.from(
+  document.getElementById("pWaistSizes").selectedOptions
+).map(option => option.value);
   let image=document.getElementById("pImage").value.trim();
   const file = photoUpload.files[0];
   if (file) {
@@ -108,21 +124,37 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
   const desc=document.getElementById("pDesc").value.trim();
 if(!name || !desc || !(price>0) || ! Number.isInteger(stock) || stock<0){document.getElementById("formMsg").textContent="Please complete all required fields.";return;}
   
-  const p={id:"p"+Date.now(),name,price,stock,shipping_fee:shippingFee,category,image,desc,};
+  const p={
+  id:"p"+Date.now(),
+  name,
+  price,
+  stock,
+  shipping_fee:shippingFee,
+  category,
+  image,
+  desc,
+  colors,
+  clothing_sizes:clothingSizes,
+  shoe_sizes:shoeSizes,
+  waist_sizes:waistSizes
+};
   const response=await fetch("/api/products",{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     
       body:JSON.stringify({
-        name:name,
-          price:price,
-        
-        stock:stock,
-        shipping_fee: shippingFee,
-        category: category,
-        image: image,
-        description: desc
-      })
+  name:name,
+  price:price,
+  stock:stock,
+  shipping_fee:shippingFee,
+  category:category,
+  image:image,
+  description:desc,
+  colors:colors,
+  clothing_sizes:clothingSizes,
+  shoe_sizes:shoeSizes,
+  waist_sizes:waistSizes
+})
   });
 if (!response.ok) { const err=await response.json(); alert(err.error || "Product could not be saved"); return; }
   const data=await response.json();p.id=data.id; 
