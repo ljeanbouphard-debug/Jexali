@@ -70,7 +70,61 @@ function openProductModal(id){
 
   document.getElementById("modalProductPrice").textContent =
     money(p.price);
+  const optionSets = [
+    {
+      groupId: "modalColorGroup",
+      listId: "modalColors",
+      values: Array.isArray(p.colors) ? p.colors : []
+    },
+    {
+      groupId: "modalClothingSizeGroup",
+      listId: "modalClothingSizes",
+      values: Array.isArray(p.clothing_sizes) ? p.clothing_sizes : []
+    },
+    {
+      groupId: "modalShoeSizeGroup",
+      listId: "modalShoeSizes",
+      values: Array.isArray(p.shoe_sizes) ? p.shoe_sizes : []
+    },
+    {
+      groupId: "modalWaistSizeGroup",
+      listId: "modalWaistSizes",
+      values: Array.isArray(p.waist_sizes) ? p.waist_sizes : []
+    }
+  ];
 
+  optionSets.forEach(option => {
+    const group = document.getElementById(option.groupId);
+    const list = document.getElementById(option.listId);
+
+    if(option.values.length === 0){
+      group.style.display = "none";
+      list.innerHTML = "";
+      return;
+    }
+
+    group.style.display = "";
+
+    list.innerHTML = option.values.map(value => `
+      <button
+        type="button"
+        class="product-option-btn"
+        data-value="${escapeHtml(value)}"
+      >
+        ${escapeHtml(value)}
+      </button>
+    `).join("");
+
+    list.querySelectorAll(".product-option-btn")
+      .forEach(button => {
+        button.addEventListener("click", () => {
+          list.querySelectorAll(".product-option-btn")
+            .forEach(btn => btn.classList.remove("selected"));
+
+          button.classList.add("selected");
+        });
+      });
+  });
   document.getElementById("productModal")
     .classList.add("open");
 }
