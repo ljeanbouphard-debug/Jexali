@@ -210,8 +210,10 @@ const shoeSizes = Array.from(
 ).map(input => input.value);
 
 const waistSizes = Array.from(
-  document.getElementById("pWaistSizes").selectedOptions
-).map(option => option.value);
+  document.querySelectorAll(
+    "#pWaistSizes input[type='checkbox']:checked"
+  )
+).map(input => input.value);
   let image=document.getElementById("pImage").value.trim();
   const file = photoUpload.files[0];
   if (file) {
