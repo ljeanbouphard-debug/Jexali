@@ -204,8 +204,10 @@ const clothingSizes = Array.from(
 ).map(input => input.value);
 
 const shoeSizes = Array.from(
-  document.getElementById("pShoeSizes").selectedOptions
-).map(option => option.value);
+  document.querySelectorAll(
+    "#pShoeSizes input[type='checkbox']:checked"
+  )
+).map(input => input.value);
 
 const waistSizes = Array.from(
   document.getElementById("pWaistSizes").selectedOptions
