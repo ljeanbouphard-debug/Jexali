@@ -217,6 +217,20 @@ db.query(`CREATE TABLE IF NOT EXISTS sellers (id SERIAL PRIMARY KEY, stripe_acco
 db.query("ALTER TABLE sellers ADD COLUMN IF NOT EXISTS user_id INTEGER UNIQUE");
 db.query("CREATE TABLE IF NOT EXISTS orders (id SERIAL PRIMARY KEY, stripe_session_id TEXT UNIQUE, seller_id INTEGER, amount REAL DEFAULT 0, seller_earnings REAL DEFAULT 0, jexali_fee REAL DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
 db.query(`
+  ALTER TABLE orders
+  ADD COLUMN IF NOT EXISTS buyer_name TEXT,
+  ADD COLUMN IF NOT EXISTS buyer_email TEXT,
+  ADD COLUMN IF NOT EXISTS buyer_phone TEXT,
+  ADD COLUMN IF NOT EXISTS shipping_name TEXT,
+  ADD COLUMN IF NOT EXISTS shipping_line1 TEXT,
+  ADD COLUMN IF NOT EXISTS shipping_line2 TEXT,
+  ADD COLUMN IF NOT EXISTS shipping_city TEXT,
+  ADD COLUMN IF NOT EXISTS shipping_state TEXT,
+  ADD COLUMN IF NOT EXISTS shipping_postal_code TEXT,
+  ADD COLUMN IF NOT EXISTS shipping_country TEXT,
+  ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'New'
+`).catch(console.error);
+db.query(`
   CREATE TABLE IF NOT EXISTS order_items (
     id SERIAL PRIMARY KEY,
     order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
@@ -643,7 +657,13 @@ app.post('/api/checkout', async (req,res)=>{
       await stripe.checkout.sessions.create({
 
         mode:'payment',
+shipping_address_collection:{
+  allowed_countries:['US']
+},
 
+phone_number_collection:{
+  enabled:true
+},
         metadata:{
           seller_id:String(sellerIds[0]),
 
@@ -721,7 +741,32 @@ app.get('/api/checkout/verify', async (req,res)=>{
         error:'Payment not completed'
       });
     }
+const customerDetails =
+  session.customer_details || {};
 
+const shippingDetails =
+  session.shipping_details || {};
+
+const shippingAddress =
+  shippingDetails.address ||
+  customerDetails.address ||
+  {};
+
+const buyerName =
+  shippingDetails.name ||
+  customerDetails.name ||
+  null;
+
+const buyerEmail =
+  customerDetails.email || null;
+
+const buyerPhone =
+  customerDetails.phone || null;
+
+const shippingName =
+  shippingDetails.name ||
+  customerDetails.name ||
+  null;
     const sellerId =
       Number(session.metadata?.seller_id);
 
@@ -747,34 +792,68 @@ app.get('/api/checkout/verify', async (req,res)=>{
 
     /* Create or reuse the order */
 
-    const orderResult = await db.query(
-      `
-      INSERT INTO orders (
-        stripe_session_id,
-        seller_id,
-        amount,
-        seller_earnings,
-        jexali_fee
-      )
-      VALUES ($1,$2,$3,$4,$5)
+  const orderResult = await db.query(
+  `
+  INSERT INTO orders (
+    stripe_session_id,
+    seller_id,
+    amount,
+    seller_earnings,
+    jexali_fee,
+    buyer_name,
+    buyer_email,
+    buyer_phone,
+    shipping_name,
+    shipping_line1,
+    shipping_line2,
+    shipping_city,
+    shipping_state,
+    shipping_postal_code,
+    shipping_country
+  )
+  VALUES (
+    $1,$2,$3,$4,$5,
+    $6,$7,$8,$9,$10,
+    $11,$12,$13,$14,$15
+  )
 
-      ON CONFLICT (stripe_session_id)
-      DO UPDATE SET
-        seller_id = EXCLUDED.seller_id,
-        amount = EXCLUDED.amount,
-        seller_earnings = EXCLUDED.seller_earnings,
-        jexali_fee = EXCLUDED.jexali_fee
+  ON CONFLICT (stripe_session_id)
+  DO UPDATE SET
+    seller_id = EXCLUDED.seller_id,
+    amount = EXCLUDED.amount,
+    seller_earnings = EXCLUDED.seller_earnings,
+    jexali_fee = EXCLUDED.jexali_fee,
+    buyer_name = EXCLUDED.buyer_name,
+    buyer_email = EXCLUDED.buyer_email,
+    buyer_phone = EXCLUDED.buyer_phone,
+    shipping_name = EXCLUDED.shipping_name,
+    shipping_line1 = EXCLUDED.shipping_line1,
+    shipping_line2 = EXCLUDED.shipping_line2,
+    shipping_city = EXCLUDED.shipping_city,
+    shipping_state = EXCLUDED.shipping_state,
+    shipping_postal_code = EXCLUDED.shipping_postal_code,
+    shipping_country = EXCLUDED.shipping_country
 
-      RETURNING id
-      `,
-      [
-        session.id,
-        sellerId,
-        amount,
-        sellerEarnings,
-        jexaliFee
-      ]
-    );
+  RETURNING id
+  `,
+  [
+    session.id,
+    sellerId,
+    amount,
+    sellerEarnings,
+    jexaliFee,
+    buyerName,
+    buyerEmail,
+    buyerPhone,
+    shippingName,
+    shippingAddress.line1 || null,
+    shippingAddress.line2 || null,
+    shippingAddress.city || null,
+    shippingAddress.state || null,
+    shippingAddress.postal_code || null,
+    shippingAddress.country || null
+  ]
+);  
 
     const orderId =
       orderResult.rows[0].id;
