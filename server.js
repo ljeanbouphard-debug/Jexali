@@ -1029,6 +1029,8 @@ app.get('/api/seller/orders', async (req,res)=>{
         o.shipping_country,
 
         o.status,
+o.shipping_carrier,
+o.tracking_number,
 
         COALESCE(
           json_agg(
@@ -1075,7 +1077,9 @@ app.get('/api/seller/orders', async (req,res)=>{
         o.shipping_postal_code,
         o.shipping_country,
 
-        o.status
+      o.status,
+o.shipping_carrier,
+o.tracking_number  
 
       ORDER BY o.created_at DESC
 
@@ -1122,6 +1126,8 @@ app.get('/api/buyer/orders', async (req,res)=>{
         o.amount,
         o.created_at,
         o.status,
+o.shipping_carrier,
+o.tracking_number,
 
         o.shipping_name,
         o.shipping_line1,
@@ -1162,6 +1168,8 @@ app.get('/api/buyer/orders', async (req,res)=>{
         o.amount,
         o.created_at,
         o.status,
+o.shipping_carrier,
+o.tracking_number,
 
         o.shipping_name,
         o.shipping_line1,
