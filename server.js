@@ -1265,6 +1265,106 @@ app.patch('/api/seller/orders/:id/status', async (req,res)=>{
     });
   }
 });
+/* ===== UPDATE SELLER ORDER TRACKING ===== */
+
+app.patch('/api/seller/orders/:id/tracking', async (req,res)=>{
+  try{
+
+    if(!req.session.sellerId){
+      return res.status(401).json({
+        error:'Not signed in'
+      });
+    }
+
+    const orderId =
+      Number(req.params.id);
+
+    const sellerId =
+      Number(req.session.sellerId);
+
+    const shippingCarrier =
+      String(req.body.shipping_carrier || '').trim();
+
+    const trackingNumber =
+      String(req.body.tracking_number || '').trim();
+
+    const allowedCarriers = [
+      'USPS',
+      'UPS',
+      'FedEx',
+      'DHL',
+      'Other'
+    ];
+
+    if(!Number.isInteger(orderId)){
+      return res.status(400).json({
+        error:'Invalid order id'
+      });
+    }
+
+    if(!allowedCarriers.includes(shippingCarrier)){
+      return res.status(400).json({
+        error:'Invalid shipping carrier'
+      });
+    }
+
+    if(
+      trackingNumber.length < 3 ||
+      trackingNumber.length > 100
+    ){
+      return res.status(400).json({
+        error:'Invalid tracking number'
+      });
+    }
+
+    const result = await db.query(
+      `
+      UPDATE orders
+
+      SET
+        shipping_carrier = $1,
+        tracking_number = $2
+
+      WHERE id = $3
+        AND seller_id = $4
+
+      RETURNING
+        id,
+        shipping_carrier,
+        tracking_number,
+        status
+      `,
+      [
+        shippingCarrier,
+        trackingNumber,
+        orderId,
+        sellerId
+      ]
+    );
+
+    if(!result.rows.length){
+      return res.status(404).json({
+        error:'Order not found'
+      });
+    }
+
+    res.json({
+      ok:true,
+      order:result.rows[0]
+    });
+
+  }catch(err){
+
+    console.error(
+      'Update order tracking error:',
+      err
+    );
+
+    res.status(500).json({
+      error:'Could not update tracking information'
+    });
+  }
+});
 app.post('/api/connect/create-account',async (req,res)=>{
 if (!req.session.user || req.session.user.role !== "seller") return res.status(401).json({ error: "Seller login required" });
 const userId = req.session.user.id; 
