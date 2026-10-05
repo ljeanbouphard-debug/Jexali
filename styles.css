@@ -1869,6 +1869,77 @@ color:#0b2948;
     justify-self:start;
   }
 }
+/* ===== JEXALI RECENT ORDERS ===== */
+
+#sellerOrders{
+  margin-top:20px;
+}
+
+.order-card{
+  background:#ffffff;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  padding:20px;
+  margin-top:16px;
+  box-shadow:0 6px 20px rgba(15,23,42,.06);
+}
+
+.order-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  padding-bottom:14px;
+  margin-bottom:14px;
+  border-bottom:1px solid #e5e7eb;
+}
+
+.order-header strong{
+  font-size:17px;
+  color:#111827;
+}
+
+.order-header span{
+  font-size:13px;
+  color:#6b7280;
+}
+
+.order-item{
+  padding:14px 0;
+}
+
+.order-item strong{
+  display:block;
+  font-size:17px;
+  color:#111827;
+  margin-bottom:10px;
+}
+
+.order-item p{
+  margin:6px 0;
+  color:#4b5563;
+  font-size:14px;
+}
+
+.order-card > p:last-child{
+  border-top:1px solid #e5e7eb;
+  padding-top:14px;
+  margin-top:10px;
+  font-size:17px;
+  color:#111827;
+}
+
+@media(max-width:600px){
+  .order-header{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .order-card{
+    padding:16px;
+  }
+}
+
 
 
 
