@@ -19,6 +19,13 @@
       <button data-view="shop">Shop</button>
       <button data-view="sell">Sell on Jexali</button>
       <button data-view="dashboard">Seller Dashboard</button>
+      <button
+  id="myOrdersNav"
+  data-view="myorders"
+  style="display:none"
+>
+  My Orders
+</button>
     </nav>
     <button class="cart-button"
       data-view="cart">
@@ -481,7 +488,26 @@ class="fa-solid fa-user-group"></i></div>
 
 </div>
     </section>
+<section id="myorders" class="view">
 
+  <div class="buyer-orders-header">
+    <div>
+      <p class="eyebrow">YOUR PURCHASES</p>
+      <h2>My Orders</h2>
+      <p>
+        View your purchases, shipping status,
+        and delivery information.
+      </p>
+    </div>
+  </div>
+
+  <div id="buyerOrders">
+    <p class="muted">
+      Your orders will appear here.
+    </p>
+  </div>
+
+</section>
   <section id="cart" class="view">
   <div class="cart-page-header">
     <p class="eyebrow">YOUR SHOPPING BAG</p>
