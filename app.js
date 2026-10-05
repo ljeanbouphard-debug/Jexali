@@ -408,83 +408,184 @@ fetch("/api/seller/orders", {
 
 if (!recentOrders) return; 
 
-  recentOrders.innerHTML = `
-    ${
-      orders.length === 0
-        ? `<p>No orders yet.</p>`
-        : orders.map(order => `
+ recentOrders.innerHTML = `
+  ${
+    orders.length === 0
+      ? `<p>No orders yet.</p>`
+      : orders.map(order => {
 
-          <div class="order-card">
+          const shippingCityLine = [
+            order.shipping_city,
+            order.shipping_state,
+            order.shipping_postal_code
+          ].filter(Boolean).join(", ");
 
-            <div class="order-header">
-              <strong>Order #${order.id}</strong>
+          const hasBuyerDetails =
+            order.buyer_name ||
+            order.buyer_email ||
+            order.buyer_phone ||
+            order.shipping_line1 ||
+            order.shipping_city;
 
-              <span>
-                ${
-                  order.created_at
-                    ? new Date(order.created_at).toLocaleString()
-                    : ""
-                }
-              </span>
-            </div>
+          return `
+            <div class="order-card">
 
-            ${(order.items || []).map(item => `
+              <div class="order-header">
+                <strong>Order #${order.id}</strong>
 
-              <div class="order-item">
-
-                <strong>
-                  ${item.product_name || "Product"}
-                </strong>
-
-                <p>
-                  Quantity: ${item.quantity || 1}
-                </p>
-
-                ${
-                  item.selected_color
-                    ? `<p>Color: ${item.selected_color}</p>`
-                    : ""
-                }
-
-                ${
-                  item.selected_clothing_size
-                    ? `<p>Size: ${item.selected_clothing_size}</p>`
-                    : ""
-                }
-
-                ${
-                  item.selected_shoe_size
-                    ? `<p>Shoe Size: ${item.selected_shoe_size}</p>`
-                    : ""
-                }
-
-                ${
-                  item.selected_waist_size
-                    ? `<p>Waist Size: ${item.selected_waist_size}</p>`
-                    : ""
-                }
-
-                ${
-                  item.unit_price != null
-                    ? `<p>Price: ${money(item.unit_price)}</p>`
-                    : ""
-                }
-
+                <span>
+                  ${
+                    order.created_at
+                      ? new Date(order.created_at).toLocaleString()
+                      : ""
+                  }
+                </span>
               </div>
 
-            `).join("")}
+              <div class="order-status-row">
+                <span class="order-status-label">
+                  Status
+                </span>
 
-            ${
-              order.amount != null
-                ? `<p><strong>Order Total: ${money(order.amount)}</strong></p>`
-                : ""
-            }
+                <span class="order-status-badge">
+                  ${escapeHtml(order.status || "New")}
+                </span>
+              </div>
 
-          </div>
+              ${(order.items || []).map(item => `
 
-        `).join("")
-    }
-  `;
+                <div class="order-item">
+
+                  <strong>
+                    ${escapeHtml(item.product_name || "Product")}
+                  </strong>
+
+                  <p>
+                    Quantity: ${item.quantity || 1}
+                  </p>
+
+                  ${
+                    item.selected_color
+                      ? `<p>Color: ${escapeHtml(item.selected_color)}</p>`
+                      : ""
+                  }
+
+                  ${
+                    item.selected_clothing_size
+                      ? `<p>Size: ${escapeHtml(item.selected_clothing_size)}</p>`
+                      : ""
+                  }
+
+                  ${
+                    item.selected_shoe_size
+                      ? `<p>Shoe Size: ${escapeHtml(item.selected_shoe_size)}</p>`
+                      : ""
+                  }
+
+                  ${
+                    item.selected_waist_size
+                      ? `<p>Waist Size: ${escapeHtml(item.selected_waist_size)}</p>`
+                      : ""
+                  }
+
+                  ${
+                    item.unit_price != null
+                      ? `<p>Price: ${money(item.unit_price)}</p>`
+                      : ""
+                  }
+
+                </div>
+
+              `).join("")}
+
+              ${
+                hasBuyerDetails
+                  ? `
+                    <div class="order-customer-details">
+
+                      <div class="order-detail-box">
+                        <h4>Customer</h4>
+
+                        ${
+                          order.buyer_name
+                            ? `<p><strong>Name:</strong> ${escapeHtml(order.buyer_name)}</p>`
+                            : ""
+                        }
+
+                        ${
+                          order.buyer_email
+                            ? `<p><strong>Email:</strong> ${escapeHtml(order.buyer_email)}</p>`
+                            : ""
+                        }
+
+                        ${
+                          order.buyer_phone
+                            ? `<p><strong>Phone:</strong> ${escapeHtml(order.buyer_phone)}</p>`
+                            : ""
+                        }
+                      </div>
+
+                      <div class="order-detail-box">
+                        <h4>Shipping Address</h4>
+
+                        ${
+                          order.shipping_name
+                            ? `<p>${escapeHtml(order.shipping_name)}</p>`
+                            : ""
+                        }
+
+                        ${
+                          order.shipping_line1
+                            ? `<p>${escapeHtml(order.shipping_line1)}</p>`
+                            : ""
+                        }
+
+                        ${
+                          order.shipping_line2
+                            ? `<p>${escapeHtml(order.shipping_line2)}</p>`
+                            : ""
+                        }
+
+                        ${
+                          shippingCityLine
+                            ? `<p>${escapeHtml(shippingCityLine)}</p>`
+                            : ""
+                        }
+
+                        ${
+                          order.shipping_country
+                            ? `<p>${escapeHtml(order.shipping_country)}</p>`
+                            : ""
+                        }
+
+                      </div>
+
+                    </div>
+                  `
+                  : `
+                    <div class="order-old-details">
+                      Customer and shipping details are not available for this earlier order.
+                    </div>
+                  `
+              }
+
+              ${
+                order.amount != null
+                  ? `
+                    <p class="order-total">
+                      <strong>
+                        Order Total: ${money(order.amount)}
+                      </strong>
+                    </p>
+                  `
+                  : ""
+              }
+
+            </div>
+          `;
+        }).join("")
+  }
+`; 
 })
 .catch(err => {
   console.error("Recent orders error:", err);
