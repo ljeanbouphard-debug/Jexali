@@ -2144,6 +2144,39 @@ color:#0b2948;
     font-size:14px;
   }
 }
+/* ===== JEXALI ORDER STATUS SELECT ===== */
+
+#sellerOrders .order-status-select{
+  min-width:145px;
+  padding:9px 34px 9px 12px;
+  border:1px solid #f5d77a;
+  border-radius:999px;
+  background:#fff8e1;
+  color:#8a5a00;
+  font-weight:800;
+  cursor:pointer;
+  outline:none;
+  box-shadow:0 3px 10px rgba(15,23,42,.06);
+}
+
+#sellerOrders .order-status-select:focus{
+  border-color:#f3b61f;
+  box-shadow:0 0 0 3px rgba(243,182,31,.15);
+}
+
+#sellerOrders .order-status-select:disabled{
+  opacity:.65;
+  cursor:wait;
+}
+
+@media(max-width:600px){
+  #sellerOrders .order-status-select{
+    min-width:130px;
+    padding:8px 30px 8px 11px;
+    font-size:13px;
+  }
+}
+
 
 
 
