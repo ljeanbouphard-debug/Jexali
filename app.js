@@ -11,8 +11,24 @@ const allProducts=()=>[...customProducts];
 fetch('/api/products')
 .then(res=>res.json())
 .then(products=>{
+
   customProducts=products;
   renderShop();
+
+  const sharedProductId =
+    new URLSearchParams(window.location.search)
+      .get("product");
+
+  if(sharedProductId){
+
+    go("shop");
+
+    setTimeout(() => {
+      openProductModal(sharedProductId);
+    }, 100);
+
+  }
+
 });
   
 const money=n=>"$"+Number(n).toFixed(2);
@@ -36,8 +52,16 @@ function cardHTML(p, seller=false){
       <p>${escapeHtml(p.desc)}</p>
       <div class="price">${money(p.price)}</div>
       ${seller
-        ? `<button class="secondary remove-product" data-id="${p.id}">Remove listing</button>`
-        : Number(p.stock) <= 0
+  ? `
+    <button class="primary share-product" data-id="${p.id}">
+      Share Product
+    </button>
+
+    <button class="secondary remove-product" data-id="${p.id}">
+      Remove listing
+    </button>
+  `
+  : Number(p.stock) <= 0
           ? `<button class="primary" disabled>Out of Stock</button>`
           : `<button class="primary add-cart" data-id="${p.id}">Add to Cart</button>`
       }
@@ -392,7 +416,47 @@ function renderDashboard(){
     document.getElementById("jexaliFees").textContent=money(data.jexaliFees);
   });
 fetch('/api/seller/products').then(res=>res.json()).then(products=>{if(products.error) return; document.getElementById("listingCount").textContent=products.length; document.getElementById("sellerListings").innerHTML=products.length? products.map(p=>cardHTML(p,true)).join("") : "<p>No listings yet.</p>";
-document.querySelectorAll(".remove-product").forEach(b=>b.onclick=async()=>{const id=String(b.dataset.id).replace(/^p/,""); const r=await fetch("/api/products/"+id, {method:"DELETE"});if(r.ok) {customProducts=customProducts.filter(p=>String(p.id)!==String(id));renderDashboard();}});                                                                   
+document.querySelectorAll(".remove-product").forEach(b=>b.onclick=async()=>{const id=String(b.dataset.id).replace(/^p/,""); const r=await fetch("/api/products/"+id, {method:"DELETE"});if(r.ok) {customProducts=customProducts.filter(p=>String(p.id)!==String(id));renderDashboard();}}); 
+   document.querySelectorAll(".share-product").forEach(button => {
+
+  button.onclick = async () => {
+
+    const id = button.dataset.id;
+
+    const product = allProducts().find(
+      p => String(p.id) === String(id)
+    );
+
+    if(!product) return;
+
+    const productUrl =
+      `${window.location.origin}/?product=${encodeURIComponent(id)}`;
+
+    const shareData = {
+      title: product.name,
+      text: `Check out ${product.name} on Jexali`,
+      url: productUrl
+    };
+
+    try{
+
+      if(navigator.share){
+        await navigator.share(shareData);
+      }else{
+        await navigator.clipboard.writeText(productUrl);
+        alert("Product link copied!");
+      }
+
+    }catch(err){
+
+      if(err.name !== "AbortError"){
+        console.error("Share error:", err);
+      }
+
+    }
+  };
+
+});                                                                 
    }); 
 fetch("/api/seller/orders", {
   credentials: "include"
