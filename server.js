@@ -1096,6 +1096,100 @@ app.get('/api/seller/orders', async (req,res)=>{
     });
   }
 });
+/* ===== BUYER ORDER HISTORY ===== */
+
+app.get('/api/buyer/orders', async (req,res)=>{
+  try{
+
+    if(
+      !req.session.user ||
+      req.session.user.role !== "buyer"
+    ){
+      return res.status(401).json({
+        error:"Buyer login required"
+      });
+    }
+
+    const buyerUserId =
+      Number(req.session.user.id);
+
+    const result = await db.query(
+      `
+      SELECT
+        o.id,
+        o.amount,
+        o.created_at,
+        o.status,
+
+        o.shipping_name,
+        o.shipping_line1,
+        o.shipping_line2,
+        o.shipping_city,
+        o.shipping_state,
+        o.shipping_postal_code,
+        o.shipping_country,
+
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', oi.id,
+              'product_id', oi.product_id,
+              'product_name', oi.product_name,
+              'quantity', oi.quantity,
+              'unit_price', oi.unit_price,
+              'selected_color', oi.selected_color,
+              'selected_clothing_size', oi.selected_clothing_size,
+              'selected_shoe_size', oi.selected_shoe_size,
+              'selected_waist_size', oi.selected_waist_size
+            )
+            ORDER BY oi.id
+          )
+          FILTER (WHERE oi.id IS NOT NULL),
+          '[]'::json
+        ) AS items
+
+      FROM orders o
+
+      LEFT JOIN order_items oi
+        ON oi.order_id = o.id
+
+      WHERE o.buyer_user_id = $1
+
+      GROUP BY
+        o.id,
+        o.amount,
+        o.created_at,
+        o.status,
+
+        o.shipping_name,
+        o.shipping_line1,
+        o.shipping_line2,
+        o.shipping_city,
+        o.shipping_state,
+        o.shipping_postal_code,
+        o.shipping_country
+
+      ORDER BY o.created_at DESC
+
+      LIMIT 100
+      `,
+      [buyerUserId]
+    );
+
+    res.json(result.rows);
+
+  }catch(err){
+
+    console.error(
+      "Buyer orders error:",
+      err
+    );
+
+    res.status(500).json({
+      error:"Could not load your orders"
+    });
+  }
+});
 /* ===== UPDATE SELLER ORDER STATUS ===== */
 
 app.patch('/api/seller/orders/:id/status', async (req,res)=>{
