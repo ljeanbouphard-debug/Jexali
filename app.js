@@ -39,6 +39,7 @@ function go(view){
   window.scrollTo({top:0,behavior:"smooth"});
   if(view==="shop") renderShop();
   if(view==="dashboard") renderDashboard();
+  if(view==="myorders") renderBuyerOrders();
   if(view==="cart") renderCart();
 }
 document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.view)));
@@ -760,7 +761,206 @@ const currentStatus =
 
  
 }
+function renderBuyerOrders(){
 
+  const box =
+    document.getElementById("buyerOrders");
+
+  if(!box) return;
+
+  box.innerHTML =
+    `<p class="muted">Loading your orders...</p>`;
+
+  fetch("/api/buyer/orders", {
+    credentials:"include"
+  })
+  .then(async res => {
+
+    const data = await res.json();
+
+    if(!res.ok){
+      throw new Error(
+        data.error || "Could not load your orders"
+      );
+    }
+
+    return data;
+  })
+  .then(orders => {
+
+    if(!Array.isArray(orders) || orders.length === 0){
+
+      box.innerHTML = `
+        <div class="buyer-orders-empty">
+          <h3>No orders yet</h3>
+          <p>
+            Purchases made while logged into your
+            buyer account will appear here.
+          </p>
+        </div>
+      `;
+
+      return;
+    }
+
+    box.innerHTML = orders.map(order => {
+
+      const shippingCityLine = [
+        order.shipping_city,
+        order.shipping_state,
+        order.shipping_postal_code
+      ].filter(Boolean).join(", ");
+
+      return `
+        <div class="buyer-order-card">
+
+          <div class="buyer-order-header">
+
+            <div>
+              <strong>
+                Order #${order.id}
+              </strong>
+
+              <p>
+                ${
+                  order.created_at
+                    ? new Date(order.created_at)
+                        .toLocaleString()
+                    : ""
+                }
+              </p>
+            </div>
+
+            <span class="buyer-order-status">
+              ${escapeHtml(order.status || "New")}
+            </span>
+
+          </div>
+
+          <div class="buyer-order-items">
+
+            ${(order.items || []).map(item => `
+              <div class="buyer-order-item">
+
+                <strong>
+                  ${escapeHtml(
+                    item.product_name || "Product"
+                  )}
+                </strong>
+
+                <p>
+                  Quantity: ${item.quantity || 1}
+                </p>
+
+                ${
+                  item.selected_color
+                    ? `<p>Color: ${escapeHtml(item.selected_color)}</p>`
+                    : ""
+                }
+
+                ${
+                  item.selected_clothing_size
+                    ? `<p>Size: ${escapeHtml(item.selected_clothing_size)}</p>`
+                    : ""
+                }
+
+                ${
+                  item.selected_shoe_size
+                    ? `<p>Shoe Size: ${escapeHtml(item.selected_shoe_size)}</p>`
+                    : ""
+                }
+
+                ${
+                  item.selected_waist_size
+                    ? `<p>Waist Size: ${escapeHtml(item.selected_waist_size)}</p>`
+                    : ""
+                }
+
+                ${
+                  item.unit_price != null
+                    ? `<p>Price: ${money(item.unit_price)}</p>`
+                    : ""
+                }
+
+              </div>
+            `).join("")}
+
+          </div>
+
+          ${
+            order.shipping_line1 ||
+            order.shipping_city
+              ? `
+                <div class="buyer-order-shipping">
+
+                  <h4>
+                    Shipping Address
+                  </h4>
+
+                  ${
+                    order.shipping_name
+                      ? `<p>${escapeHtml(order.shipping_name)}</p>`
+                      : ""
+                  }
+
+                  ${
+                    order.shipping_line1
+                      ? `<p>${escapeHtml(order.shipping_line1)}</p>`
+                      : ""
+                  }
+
+                  ${
+                    order.shipping_line2
+                      ? `<p>${escapeHtml(order.shipping_line2)}</p>`
+                      : ""
+                  }
+
+                  ${
+                    shippingCityLine
+                      ? `<p>${escapeHtml(shippingCityLine)}</p>`
+                      : ""
+                  }
+
+                  ${
+                    order.shipping_country
+                      ? `<p>${escapeHtml(order.shipping_country)}</p>`
+                      : ""
+                  }
+
+                </div>
+              `
+              : ""
+          }
+
+          <div class="buyer-order-total">
+            <span>Order Total</span>
+
+            <strong>
+              ${money(order.amount || 0)}
+            </strong>
+          </div>
+
+        </div>
+      `;
+
+    }).join("");
+
+  })
+  .catch(err => {
+
+    console.error(
+      "Buyer orders error:",
+      err
+    );
+
+    box.innerHTML = `
+      <p class="muted">
+        ${escapeHtml(err.message)}
+      </p>
+    `;
+
+  });
+}
 function renderCart(){
   const box=document.getElementById("cartItems");
 
@@ -922,6 +1122,8 @@ window.location.href=data.url;
 const registerBtn = document.getElementById("registerBtn");
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
+const myOrdersNav =
+  document.getElementById("myOrdersNav");
 logoutBtn.style.display = "none";
 const accountMessage = document.getElementById("accountMessage");
 if (registerBtn) {
@@ -940,23 +1142,65 @@ accountMessage.textContent = data.success ? "account created successfully" : dat
 });  
 }  
 if (loginBtn) {
-loginBtn.addEventListener("click" , async () => { 
-const email = document.getElementById("loginEmail").value.trim();
-const password = document.getElementById("loginPassword").value;
-const response = await fetch("/api/login", { 
-method: "POST", 
-headers: { "Content-Type": "application/json" },
-body: JSON.stringify({ email, password }) 
-}); 
-const data = await response.json();
-if (response.ok) { 
-logoutBtn.style.display = "";  
-accountMessage.textContent = `Logged in as ${data.user.name} (${data.user.role})`;
-fetch("/api/me").then(r=>r.json()).then(me=>{stripeConnected=!! me.stripeConnected;connectStripeBtn.textContent=stripeConnected?"Stripe Connected":"Connect with Stripe";});  
-} else { 
-accountMessage.textContent = data.error || "Could not log in";
-} 
-});
+
+  loginBtn.addEventListener("click", async () => {
+
+    const email =
+      document.getElementById("loginEmail").value.trim();
+
+    const password =
+      document.getElementById("loginPassword").value;
+
+    const response = await fetch("/api/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email,
+        password
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+
+      logoutBtn.style.display = "";
+
+      accountMessage.textContent =
+        `Logged in as ${data.user.name} (${data.user.role})`;
+
+      if(myOrdersNav){
+        myOrdersNav.style.display =
+          data.user.role === "buyer"
+            ? ""
+            : "none";
+      }
+
+      fetch("/api/me")
+        .then(r => r.json())
+        .then(me => {
+
+          stripeConnected =
+            !!me.stripeConnected;
+
+          connectStripeBtn.textContent =
+            stripeConnected
+              ? "Stripe Connected"
+              : "Connect with Stripe";
+
+        });
+
+    } else {
+
+      accountMessage.textContent =
+        data.error || "Could not log in";
+
+    }
+
+  });
+
 }
 if (logoutBtn) {
 logoutBtn.addEventListener("click", async () => {
@@ -964,6 +1208,9 @@ const response = await fetch("/api/logout", { method: "POST" });
 if (response.ok) {
 accountMessage.textContent = "Logged out";
 logoutBtn.style.display = "none"; 
+ if(myOrdersNav){
+  myOrdersNav.style.display = "none";
+} 
 stripeConnected=false; 
 connectStripeBtn.textContent="Connect with Stripe";  
 } 
@@ -975,7 +1222,28 @@ accountMessage.textContent = "Could not log out";
 fetch("/api/me")
 .then(res => res.ok ? res.json() : null)
 .then(data => {
-if (!data || !data.user) return;
-logoutBtn.style.display = "";  
-accountMessage.textContent = "Logged in as " + data.user.name + " (" + data.user.role + ")"; 
-});  
+
+  if(!data || !data.user){
+    if(myOrdersNav){
+      myOrdersNav.style.display = "none";
+    }
+    return;
+  }
+
+  logoutBtn.style.display = "";
+
+  accountMessage.textContent =
+    "Logged in as " +
+    data.user.name +
+    " (" +
+    data.user.role +
+    ")";
+
+  if(myOrdersNav){
+    myOrdersNav.style.display =
+      data.user.role === "buyer"
+        ? ""
+        : "none";
+  }
+
+}); 
