@@ -229,7 +229,9 @@ db.query(`
   ADD COLUMN IF NOT EXISTS shipping_state TEXT,
   ADD COLUMN IF NOT EXISTS shipping_postal_code TEXT,
   ADD COLUMN IF NOT EXISTS shipping_country TEXT,
-  ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'New'
+  ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'New',
+ADD COLUMN IF NOT EXISTS tracking_number TEXT,
+ADD COLUMN IF NOT EXISTS shipping_carrier TEXT
 `).catch(console.error);
 db.query(`
   CREATE TABLE IF NOT EXISTS order_items (
