@@ -216,8 +216,37 @@ app.get('/api/seller/products', async (req,res)=>{if (!req.session.sellerId) ret
 db.query(`CREATE TABLE IF NOT EXISTS sellers (id SERIAL PRIMARY KEY, stripe_account_id TEXT UNIQUE, email TEXT UNIQUE)`);
 db.query("ALTER TABLE sellers ADD COLUMN IF NOT EXISTS user_id INTEGER UNIQUE");
 db.query("CREATE TABLE IF NOT EXISTS orders (id SERIAL PRIMARY KEY, stripe_session_id TEXT UNIQUE, seller_id INTEGER, amount REAL DEFAULT 0, seller_earnings REAL DEFAULT 0, jexali_fee REAL DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
-
-
+db.query(`
+  CREATE TABLE IF NOT EXISTS order_items (
+    id SERIAL PRIMARY KEY,
+    order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
+    product_id INTEGER,
+    product_name TEXT,
+    quantity INTEGER DEFAULT 1,
+    unit_price REAL DEFAULT 0,
+    selected_color TEXT,
+    selected_clothing_size TEXT,
+    selected_shoe_size TEXT,
+    selected_waist_size TEXT,
+    stripe_line_item_id TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )
+`)
+.then(() =>
+  db.query(`
+    ALTER TABLE order_items
+    ADD COLUMN IF NOT EXISTS stripe_line_item_id TEXT
+  `)
+)
+.then(() =>
+  db.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS
+    order_items_stripe_line_item_id_unique
+    ON order_items(stripe_line_item_id)
+    WHERE stripe_line_item_id IS NOT NULL
+  `)
+)
+.catch(console.error);
 
 
 db.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS seller_id INTEGER");
@@ -274,94 +303,576 @@ const sellerRow = { id:Number(req.session.sellerId) };
 res.status(201).json({id:newID});
 });
 app.delete('/api/products/:id', async (req,res)=>{if (!req.session.sellerId) return res.status(401).json({error:'Not signed in'}); const id = Number(req.params.id); if (!Number.isInteger(id)) return res.status(400).json({error:'Invalid product id'}); const result = await db.query('DELETE FROM products WHERE id = $1 AND seller_id = $2 RETURNING id', [id, Number(req.session.sellerId)]); if (result.rows.length === 0) return res.status(404).json({error:'Product not found'}); res.json({ok:true,id:result.rows[0].id});});
-app.post('/api/checkout',async (req,res)=>{
-const cart=req.body.cart;
- 
- if(!Array.isArray(cart)||
-cart.length===0)
- return res.status(400).json({error:'Cart is empty'});
- const productIds = cart.map(item =>String(item.id).replace(/^p/,""));
- 
- const quantities = cart.map(item => Number(item.quantity || 1));
- if (quantities.some(q => ! Number.isInteger(q) || q < 1 || q > 99)) return res.status(400).json({error:'Invalid quantity'});
- const dbProducts = (await db.query('SELECT * FROM products WHERE id = ANY($1::int[])',[productIds])).rows;
+app.post('/api/checkout', async (req,res)=>{
+  try{
+    const cart = req.body.cart;
 
+    if(!Array.isArray(cart) || cart.length === 0){
+      return res.status(400).json({
+        error:'Cart is empty'
+      });
+    }
 
- if (dbProducts.length !== productIds.length) { return res.status(400).json({error:'Invalid product in cart'});}
- const outOfStock = dbProducts.find(p => (cart.find(c => String(c.id).replace(/^p/,"") ===String(p.id))?.quantity || 1) > p.stock);
-if (outOfStock) return res.status(400).json({error:'Not enough stock'}); 
-const sellerIds = dbProducts.map(product => product.seller_id);
- const allSameSellerId = sellerIds.every(id => id === sellerIds[0]);
-if (!allSameSellerId || !sellerIds[0]) return res.status(400).json({error:'Products must belong to one valid seller'});
- 
-const sellerResult = await db.query('SELECT stripe_account_id FROM sellers WHERE id = $1', [sellerIds[0]]);
-if (sellerResult.rows.length === 0) return res.status(400).json({error:'Seller not found'});
-const sellerStripeId = sellerResult.rows[0].stripe_account_id;
- const shippingTotal = dbProducts.reduce(
-  (sum, item) => sum + Number(item.shipping_fee || 0), 0 );
- const productSubtotalCents = dbProducts.reduce((sum, item) => {
-  const qty = Number(cart.find(c =>
-   String(c.id).replace(/^p/,"") === String(item.id)
-   )?.quantity || 1);
-  return sum + Math.round(Number(item.price) * 100) * qty;
- }, 0);
-const session = await stripe.checkout.sessions.create({
-mode:'payment',
- metadata: { seller_id: String(sellerIds[0]),
-  shipping_total_cents:
-   String(Math.round(shippingTotal * 100)) },
-branding_settings: { display_name:' Jexali ' },
-line_items:[... dbProducts.map(item=>({
-price_data:{
-currency:'usd',
-product_data:{
-name:item.name,
-metadata:{product_id:String(item.id)}, 
-},
-unit_amount:Math.round(Number(item.price)*100),
-},
-quantity:(cart.find(c =>
- String(c.id).replace(/^p/,"") ===
- String(item.id))?.quantity || 1),
-})),
- ...(shippingTotal > 0 ? [{
-  price_data: {
-   currency: 'usd',
-   product_data: { name: 'Shipping' },
-    unit_amount:
-    Math.round(shippingTotal * 100), },
-    quantity: 1,                               
-    }] : [])],                                                                  
-...(sellerStripeId ? {payment_intent_data:
-{application_fee_amount: Math.round(productSubtotalCents * 0.10),
- transfer_data: {
-  destination: sellerStripeId
- }
-}
-  } : {}),
-                                                                           
-success_url:'https://jexali.onrender.com/?success=1&session_id={CHECKOUT_SESSION_ID}',
-cancel_url:'https://jexali.onrender.com/?canceled=1',
-});
- 
-res.json({url:session.url});
+    const normalizedCart = cart.map(item => ({
+      productId: Number(
+        String(item.id).replace(/^p/,"")
+      ),
+
+      quantity: Number(item.quantity || 1),
+
+      selectedColor:
+        String(item.selectedColor || "").trim(),
+
+      selectedClothingSize:
+        String(item.selectedClothingSize || "").trim(),
+
+      selectedShoeSize:
+        String(item.selectedShoeSize || "").trim(),
+
+      selectedWaistSize:
+        String(item.selectedWaistSize || "").trim()
+    }));
+
+    if(
+      normalizedCart.some(item =>
+        !Number.isInteger(item.productId)
+      )
+    ){
+      return res.status(400).json({
+        error:'Invalid product in cart'
+      });
+    }
+
+    if(
+      normalizedCart.some(item =>
+        !Number.isInteger(item.quantity) ||
+        item.quantity < 1 ||
+        item.quantity > 99
+      )
+    ){
+      return res.status(400).json({
+        error:'Invalid quantity'
+      });
+    }
+
+    const uniqueProductIds = [
+      ...new Set(
+        normalizedCart.map(item => item.productId)
+      )
+    ];
+
+    const dbProducts = (
+      await db.query(
+        'SELECT * FROM products WHERE id = ANY($1::int[])',
+        [uniqueProductIds]
+      )
+    ).rows;
+
+    if(dbProducts.length !== uniqueProductIds.length){
+      return res.status(400).json({
+        error:'Invalid product in cart'
+      });
+    }
+
+    const productMap = new Map(
+      dbProducts.map(product => [
+        Number(product.id),
+        product
+      ])
+    );
+
+    /* Validate selected options */
+
+    for(const cartItem of normalizedCart){
+
+      const product =
+        productMap.get(cartItem.productId);
+
+      const colors =
+        Array.isArray(product.colors)
+          ? product.colors.map(String)
+          : [];
+
+      const clothingSizes =
+        Array.isArray(product.clothing_sizes)
+          ? product.clothing_sizes.map(String)
+          : [];
+
+      const shoeSizes =
+        Array.isArray(product.shoe_sizes)
+          ? product.shoe_sizes.map(String)
+          : [];
+
+      const waistSizes =
+        Array.isArray(product.waist_sizes)
+          ? product.waist_sizes.map(String)
+          : [];
+
+      if(
+        colors.length > 0 &&
+        !colors.includes(cartItem.selectedColor)
+      ){
+        return res.status(400).json({
+          error:`Please choose a valid color for ${product.name}`
+        });
+      }
+
+      if(
+        clothingSizes.length > 0 &&
+        !clothingSizes.includes(
+          cartItem.selectedClothingSize
+        )
+      ){
+        return res.status(400).json({
+          error:`Please choose a valid size for ${product.name}`
+        });
+      }
+
+      if(
+        shoeSizes.length > 0 &&
+        !shoeSizes.includes(
+          cartItem.selectedShoeSize
+        )
+      ){
+        return res.status(400).json({
+          error:`Please choose a valid shoe size for ${product.name}`
+        });
+      }
+
+      if(
+        waistSizes.length > 0 &&
+        !waistSizes.includes(
+          cartItem.selectedWaistSize
+        )
+      ){
+        return res.status(400).json({
+          error:`Please choose a valid waist size for ${product.name}`
+        });
+      }
+    }
+
+    /* Check total stock for each product */
+
+    const requestedQuantities = new Map();
+
+    normalizedCart.forEach(item => {
+      requestedQuantities.set(
+        item.productId,
+        (requestedQuantities.get(item.productId) || 0)
+        + item.quantity
+      );
+    });
+
+    for(const [productId, quantity]
+      of requestedQuantities){
+
+      const product = productMap.get(productId);
+
+      if(quantity > Number(product.stock || 0)){
+        return res.status(400).json({
+          error:`Not enough stock for ${product.name}`
+        });
+      }
+    }
+
+    /* All products must belong to one seller */
+
+    const sellerIds =
+      dbProducts.map(product =>
+        Number(product.seller_id)
+      );
+
+    const allSameSellerId =
+      sellerIds.every(
+        id => id === sellerIds[0]
+      );
+
+    if(
+      !allSameSellerId ||
+      !sellerIds[0]
+    ){
+      return res.status(400).json({
+        error:'Products must belong to one valid seller'
+      });
+    }
+
+    const sellerResult =
+      await db.query(
+        'SELECT stripe_account_id FROM sellers WHERE id = $1',
+        [sellerIds[0]]
+      );
+
+    if(sellerResult.rows.length === 0){
+      return res.status(400).json({
+        error:'Seller not found'
+      });
+    }
+
+    const sellerStripeId =
+      sellerResult.rows[0].stripe_account_id;
+
+    /* Keep current shipping behavior:
+       one shipping fee per unique product */
+
+    const shippingTotal =
+      dbProducts.reduce(
+        (sum,product) =>
+          sum + Number(product.shipping_fee || 0),
+        0
+      );
+
+    const productSubtotalCents =
+      normalizedCart.reduce(
+        (sum,cartItem) => {
+
+          const product =
+            productMap.get(cartItem.productId);
+
+          return sum +
+            Math.round(
+              Number(product.price) * 100
+            ) * cartItem.quantity;
+        },
+        0
+      );
+
+    /* Create one Stripe line item
+       for every cart selection */
+
+    const productLineItems =
+      normalizedCart.map(cartItem => {
+
+        const product =
+          productMap.get(cartItem.productId);
+
+        const variantParts = [];
+
+        const productMetadata = {
+          product_id:String(product.id)
+        };
+
+        if(cartItem.selectedColor){
+          variantParts.push(
+            `Color: ${cartItem.selectedColor}`
+          );
+
+          productMetadata.selected_color =
+            cartItem.selectedColor;
+        }
+
+        if(cartItem.selectedClothingSize){
+          variantParts.push(
+            `Size: ${cartItem.selectedClothingSize}`
+          );
+
+          productMetadata.selected_clothing_size =
+            cartItem.selectedClothingSize;
+        }
+
+        if(cartItem.selectedShoeSize){
+          variantParts.push(
+            `Shoe Size: ${cartItem.selectedShoeSize}`
+          );
+
+          productMetadata.selected_shoe_size =
+            cartItem.selectedShoeSize;
+        }
+
+        if(cartItem.selectedWaistSize){
+          variantParts.push(
+            `Waist Size: ${cartItem.selectedWaistSize}`
+          );
+
+          productMetadata.selected_waist_size =
+            cartItem.selectedWaistSize;
+        }
+
+        return {
+          price_data:{
+            currency:'usd',
+
+            product_data:{
+              name:product.name,
+
+              ...(variantParts.length > 0
+                ? {
+                    description:
+                      variantParts.join(" • ")
+                  }
+                : {}
+              ),
+
+              metadata:productMetadata
+            },
+
+            unit_amount:
+              Math.round(
+                Number(product.price) * 100
+              )
+          },
+
+          quantity:cartItem.quantity
+        };
+      });
+
+    const lineItems = [
+      ...productLineItems,
+
+      ...(shippingTotal > 0
+        ? [{
+            price_data:{
+              currency:'usd',
+
+              product_data:{
+                name:'Shipping'
+              },
+
+              unit_amount:
+                Math.round(
+                  shippingTotal * 100
+                )
+            },
+
+            quantity:1
+          }]
+        : []
+      )
+    ];
+
+    const session =
+      await stripe.checkout.sessions.create({
+
+        mode:'payment',
+
+        metadata:{
+          seller_id:String(sellerIds[0]),
+
+          shipping_total_cents:
+            String(
+              Math.round(
+                shippingTotal * 100
+              )
+            )
+        },
+
+        branding_settings:{
+          display_name:'Jexali'
+        },
+
+        line_items:lineItems,
+
+        ...(sellerStripeId
+          ? {
+              payment_intent_data:{
+                application_fee_amount:
+                  Math.round(
+                    productSubtotalCents * 0.10
+                  ),
+
+                transfer_data:{
+                  destination:sellerStripeId
+                }
+              }
+            }
+          : {}
+        ),
+
+        success_url:
+          'https://jexali.onrender.com/?success=1&session_id={CHECKOUT_SESSION_ID}',
+
+        cancel_url:
+          'https://jexali.onrender.com/?canceled=1'
+      });
+
+    res.json({
+      url:session.url
+    });
+
+  }catch(err){
+
+    console.error(
+      "Checkout error:",
+      err
+    );
+
+    res.status(500).json({
+      error:'Could not create checkout'
+    });
+  }
 });
 app.get('/api/checkout/verify', async (req,res)=>{
- const sessionId = String(req.query.session_id || '');
- if (!sessionId) return res.status(400).json({error:'Missing session id'});
- const session = await stripe.checkout.sessions.retrieve(sessionId);
- if (session.payment_status !== 'paid') return res.status(400).json({error:'Payment not completed'});
- const sellerId = Number(session.metadata?.seller_id);
- if (!Number.isInteger(sellerId)) return res.status(400).json({error:'Invalid seller'});
- const amount = Number(session.amount_total || 0) / 100;
- const shippingAmount = Number(session.metadata?.shipping_total_cents || 0) / 100;
- const jexaliFee = (amount - shippingAmount) * 0.10;
- const sellerEarnings = amount - jexaliFee;
-await db.query( 
- 'INSERT INTO orders (stripe_session_id, seller_id, amount, seller_earnings, jexali_fee) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (stripe_session_id) DO NOTHING',
- [session.id, sellerId, amount, sellerEarnings, jexaliFee]
- );
- res.json({ok:true, sales:1, sellerEarnings, jexaliFee});
+  try{
+    const sessionId =
+      String(req.query.session_id || '');
+
+    if(!sessionId){
+      return res.status(400).json({
+        error:'Missing session id'
+      });
+    }
+
+    const session =
+      await stripe.checkout.sessions.retrieve(
+        sessionId
+      );
+
+    if(session.payment_status !== 'paid'){
+      return res.status(400).json({
+        error:'Payment not completed'
+      });
+    }
+
+    const sellerId =
+      Number(session.metadata?.seller_id);
+
+    if(!Number.isInteger(sellerId)){
+      return res.status(400).json({
+        error:'Invalid seller'
+      });
+    }
+
+    const amount =
+      Number(session.amount_total || 0) / 100;
+
+    const shippingAmount =
+      Number(
+        session.metadata?.shipping_total_cents || 0
+      ) / 100;
+
+    const jexaliFee =
+      (amount - shippingAmount) * 0.10;
+
+    const sellerEarnings =
+      amount - jexaliFee;
+
+    /* Create or reuse the order */
+
+    const orderResult = await db.query(
+      `
+      INSERT INTO orders (
+        stripe_session_id,
+        seller_id,
+        amount,
+        seller_earnings,
+        jexali_fee
+      )
+      VALUES ($1,$2,$3,$4,$5)
+
+      ON CONFLICT (stripe_session_id)
+      DO UPDATE SET
+        seller_id = EXCLUDED.seller_id,
+        amount = EXCLUDED.amount,
+        seller_earnings = EXCLUDED.seller_earnings,
+        jexali_fee = EXCLUDED.jexali_fee
+
+      RETURNING id
+      `,
+      [
+        session.id,
+        sellerId,
+        amount,
+        sellerEarnings,
+        jexaliFee
+      ]
+    );
+
+    const orderId =
+      orderResult.rows[0].id;
+
+    /* Get Stripe products and their options */
+
+    const lineItems =
+      await stripe.checkout.sessions.listLineItems(
+        session.id,
+        {
+          limit:100,
+          expand:['data.price.product']
+        }
+      );
+
+    for(const item of lineItems.data){
+
+      const stripeProduct =
+        item.price?.product;
+
+      if(
+        !stripeProduct ||
+        typeof stripeProduct !== 'object'
+      ){
+        continue;
+      }
+
+      const metadata =
+        stripeProduct.metadata || {};
+
+      const productId =
+        Number(metadata.product_id);
+
+      /* Shipping has no product_id */
+      if(!Number.isInteger(productId)){
+        continue;
+      }
+
+      const quantity =
+        Number(item.quantity || 1);
+
+      const unitPrice =
+        Number(item.price?.unit_amount || 0) / 100;
+
+      await db.query(
+        `
+        INSERT INTO order_items (
+          order_id,
+          product_id,
+          product_name,
+          quantity,
+          unit_price,
+          selected_color,
+          selected_clothing_size,
+          selected_shoe_size,
+          selected_waist_size,
+          stripe_line_item_id
+        )
+        VALUES (
+          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10
+        )
+        ON CONFLICT DO NOTHING
+        `,
+        [
+          orderId,
+          productId,
+          stripeProduct.name ||
+            item.description ||
+            'Product',
+          quantity,
+          unitPrice,
+          metadata.selected_color || null,
+          metadata.selected_clothing_size || null,
+          metadata.selected_shoe_size || null,
+          metadata.selected_waist_size || null,
+          item.id
+        ]
+      );
+    }
+
+    res.json({
+      ok:true,
+      sales:1,
+      sellerEarnings,
+      jexaliFee
+    });
+
+  }catch(err){
+
+    console.error(
+      "Checkout verification error:",
+      err
+    );
+
+    res.status(500).json({
+      error:'Could not verify checkout'
+    });
+  }
 });
 app.get('/api/seller/stats', async (req,res)=>{
 if (!req.session.sellerId) return res.status(401).json({error:'Not signed in'}); const sellerId = Number(req.session.sellerId); 
