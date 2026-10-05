@@ -404,19 +404,11 @@ fetch("/api/seller/orders", {
     ? data
     : (data.orders || []);
 
-  let recentOrders = document.getElementById("recentOrders");
+ const recentOrders = document.getElementById("sellerOrders");
 
-  if (!recentOrders) {
-    recentOrders = document.createElement("div");
-    recentOrders.id = "recentOrders";
-    recentOrders.className = "recent-orders";
-
-    document.getElementById("dashboard").appendChild(recentOrders);
-  }
+if (!recentOrders) return; 
 
   recentOrders.innerHTML = `
-    <h2>Recent Orders</h2>
-
     ${
       orders.length === 0
         ? `<p>No orders yet.</p>`
