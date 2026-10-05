@@ -1002,6 +1002,20 @@ app.get('/api/seller/orders', async (req,res)=>{
         o.jexali_fee,
         o.created_at,
 
+        o.buyer_name,
+        o.buyer_email,
+        o.buyer_phone,
+
+        o.shipping_name,
+        o.shipping_line1,
+        o.shipping_line2,
+        o.shipping_city,
+        o.shipping_state,
+        o.shipping_postal_code,
+        o.shipping_country,
+
+        o.status,
+
         COALESCE(
           json_agg(
             json_build_object(
@@ -1033,7 +1047,21 @@ app.get('/api/seller/orders', async (req,res)=>{
         o.amount,
         o.seller_earnings,
         o.jexali_fee,
-        o.created_at
+        o.created_at,
+
+        o.buyer_name,
+        o.buyer_email,
+        o.buyer_phone,
+
+        o.shipping_name,
+        o.shipping_line1,
+        o.shipping_line2,
+        o.shipping_city,
+        o.shipping_state,
+        o.shipping_postal_code,
+        o.shipping_country,
+
+        o.status
 
       ORDER BY o.created_at DESC
 
