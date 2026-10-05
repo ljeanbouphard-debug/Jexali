@@ -1998,6 +1998,110 @@ color:#0b2948;
     padding:14px 16px;
   }
 }
+/* ===== JEXALI ORDER CUSTOMER + SHIPPING ===== */
+
+.order-status-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:4px 0 16px;
+  padding:10px 12px;
+  border-radius:10px;
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+}
+
+.order-status-label{
+  color:#667085;
+  font-size:13px;
+  font-weight:700;
+}
+
+.order-status-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:6px 12px;
+  border-radius:999px;
+  background:#fff3cd;
+  border:1px solid #f5d77a;
+  color:#9a6700;
+  font-size:12px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+}
+
+.order-customer-details{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  margin-top:18px;
+}
+
+.order-detail-box{
+  padding:16px;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  background:#f8fafc;
+}
+
+.order-detail-box:first-child{
+  border-top:4px solid #0b2948;
+}
+
+.order-detail-box:last-child{
+  border-top:4px solid #f3b61f;
+}
+
+.order-detail-box h4{
+  margin:0 0 12px;
+  color:#0b2948;
+  font-size:15px;
+}
+
+.order-detail-box p{
+  margin:6px 0;
+  color:#596273;
+  font-size:13px;
+  line-height:1.45;
+}
+
+.order-detail-box p strong{
+  color:#111827;
+}
+
+.order-old-details{
+  margin-top:16px;
+  padding:13px 15px;
+  border:1px dashed #d1d5db;
+  border-radius:10px;
+  background:#f8fafc;
+  color:#667085;
+  font-size:13px;
+}
+
+#sellerOrders .order-total{
+  background:#fff8e1;
+  border:1px solid #f5d77a;
+  border-radius:10px;
+  padding:12px 14px;
+  margin-top:16px;
+  color:#0b2948;
+}
+
+@media(max-width:650px){
+
+  .order-customer-details{
+    grid-template-columns:1fr;
+  }
+
+  .order-status-row{
+    align-items:center;
+  }
+}
+
 
 
 
