@@ -389,67 +389,118 @@ document.querySelectorAll(".remove-product").forEach(b=>b.onclick=async()=>{cons
 
 function renderCart(){
   const box=document.getElementById("cartItems");
+
   box.innerHTML = cart.length
   ? cart.map((p,i) => `
       <div class="cart-row">
-        <div>
-          <strong>${escapeHtml(p.name)}</strong>
 
-          ${p.selectedColor
-            ? `<div class="muted">Color: ${escapeHtml(p.selectedColor)}</div>`
-            : ""
+        <div class="cart-item-image">
+          ${p.image
+            ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}">`
+            : `<div class="cart-image-placeholder">
+                 <i class="fa-solid fa-bag-shopping"></i>
+               </div>`
           }
-
-          ${p.selectedClothingSize
-            ? `<div class="muted">Size: ${escapeHtml(p.selectedClothingSize)}</div>`
-            : ""
-          }
-
-          ${p.selectedShoeSize
-            ? `<div class="muted">Shoe Size: ${escapeHtml(p.selectedShoeSize)}</div>`
-            : ""
-          }
-
-          ${p.selectedWaistSize
-            ? `<div class="muted">Waist Size: ${escapeHtml(p.selectedWaistSize)}</div>`
-            : ""
-          }
-
-          <div class="muted">${money(p.price)}</div>
         </div>
 
-        <button data-i="${i}" class="remove-cart">
-          Remove
-        </button>
+        <div class="cart-item-info">
+
+          <div class="cart-item-category">
+            ${escapeHtml(p.category || "Product")}
+          </div>
+
+          <strong class="cart-item-name">
+            ${escapeHtml(p.name)}
+          </strong>
+
+          <div class="cart-option-badges">
+
+            ${p.selectedColor
+              ? `<span><b>Color</b> ${escapeHtml(p.selectedColor)}</span>`
+              : ""
+            }
+
+            ${p.selectedClothingSize
+              ? `<span><b>Size</b> ${escapeHtml(p.selectedClothingSize)}</span>`
+              : ""
+            }
+
+            ${p.selectedShoeSize
+              ? `<span><b>Shoe</b> ${escapeHtml(p.selectedShoeSize)}</span>`
+              : ""
+            }
+
+            ${p.selectedWaistSize
+              ? `<span><b>Waist</b> ${escapeHtml(p.selectedWaistSize)}</span>`
+              : ""
+            }
+
+          </div>
+
+          <button data-i="${i}" class="remove-cart">
+            <i class="fa-regular fa-trash-can"></i>
+            Remove
+          </button>
+
+        </div>
+
+        <div class="cart-item-price">
+          ${money(p.price)}
+        </div>
+
       </div>
     `).join("")
-  : "<p>Your cart is empty.</p>";
-  
-  const
-  subtotal=cart.reduce((s,p)=>s+Number(
-   p.price),0);
-  const uniqueShippingProducts = new
-   Map();
+  : `
+      <div class="cart-empty">
+        <i class="fa-solid fa-bag-shopping"></i>
+        <h3>Your cart is empty</h3>
+        <p>Add something you love from the marketplace.</p>
+      </div>
+    `;
+
+  const subtotal=cart.reduce(
+    (s,p)=>s+Number(p.price),
+    0
+  );
+
+  const uniqueShippingProducts=new Map();
+
   cart.forEach(p=>{
-   const key=String(p.id);
+    const key=String(p.id);
+
     if(!uniqueShippingProducts.has(key)){
-     uniqueShippingProducts.set(
-       key,
-       Number(p.shipping_fee || 0)
-       );
+      uniqueShippingProducts.set(
+        key,
+        Number(p.shipping_fee || 0)
+      );
     }
   });
-  const
-    shipping=[...uniqueShippingProducts.values()]
-  .reduce((s,n)=>s+n,0);
-  document.getElementById("subtotal").textContent=money(subtotal);
-  document.getElementById("shipping").textContent=money(shipping);
-  document.getElementById("total").textContent=money(subtotal+shipping);
-  document.querySelectorAll(".remove-cart").forEach(b=>b.addEventListener("click",()=>{
-    cart.splice(Number(b.dataset.i),1);
-    localStorage.setItem("jexaliCart",JSON.stringify(cart));
-    updateCartCount(); renderCart();
-  }));
+
+  const shipping=[
+    ...uniqueShippingProducts.values()
+  ].reduce((s,n)=>s+n,0);
+
+  document.getElementById("subtotal").textContent=
+    money(subtotal);
+
+  document.getElementById("shipping").textContent=
+    money(shipping);
+
+  document.getElementById("total").textContent=
+    money(subtotal+shipping);
+
+  document.querySelectorAll(".remove-cart")
+    .forEach(b=>b.addEventListener("click",()=>{
+      cart.splice(Number(b.dataset.i),1);
+
+      localStorage.setItem(
+        "jexaliCart",
+        JSON.stringify(cart)
+      );
+
+      updateCartCount();
+      renderCart();
+    }));
 }
 document.getElementById("checkoutBtn").addEventListener("click",()=>{
   if(!cart.length){alert("Your cart is empty.");return;}
