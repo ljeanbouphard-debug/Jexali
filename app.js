@@ -496,6 +496,14 @@ const currentStatus =
   ["New", "Shipped", "Delivered"].includes(order.status)
     ? order.status
     : "New";
+     const currentCarrier =
+  ["USPS", "UPS", "FedEx", "DHL", "Other"]
+    .includes(order.shipping_carrier)
+      ? order.shipping_carrier
+      : "";
+
+const currentTracking =
+  order.tracking_number || "";   
           return `
             <div class="order-card">
 
@@ -545,7 +553,87 @@ const currentStatus =
   </select>
 
 </div>            
+<div class="order-tracking-box">
 
+  <div class="order-tracking-fields">
+
+    <label>
+      Carrier
+
+      <select
+        class="order-carrier-select"
+        data-order-id="${order.id}"
+      >
+        <option value="">
+          Select carrier
+        </option>
+
+        <option
+          value="USPS"
+          ${currentCarrier === "USPS" ? "selected" : ""}
+        >
+          USPS
+        </option>
+
+        <option
+          value="UPS"
+          ${currentCarrier === "UPS" ? "selected" : ""}
+        >
+          UPS
+        </option>
+
+        <option
+          value="FedEx"
+          ${currentCarrier === "FedEx" ? "selected" : ""}
+        >
+          FedEx
+        </option>
+
+        <option
+          value="DHL"
+          ${currentCarrier === "DHL" ? "selected" : ""}
+        >
+          DHL
+        </option>
+
+        <option
+          value="Other"
+          ${currentCarrier === "Other" ? "selected" : ""}
+        >
+          Other
+        </option>
+
+      </select>
+    </label>
+
+    <label>
+      Tracking Number
+
+      <input
+        type="text"
+        class="order-tracking-input"
+        data-order-id="${order.id}"
+        value="${escapeHtml(currentTracking)}"
+        placeholder="Enter tracking number"
+      >
+    </label>
+
+  </div>
+
+  <button
+    type="button"
+    class="primary save-tracking-btn"
+    data-order-id="${order.id}"
+  >
+    Save Tracking
+  </button>
+
+  <p
+    class="tracking-save-message"
+    data-order-id="${order.id}"
+  ></p>
+
+</div>
               ${(order.items || []).map(item => `
 
                 <div class="order-item">
@@ -745,9 +833,107 @@ const currentStatus =
 
       }
 
+    
+  });
+  });
+  recentOrders
+  .querySelectorAll(".save-tracking-btn")
+  .forEach(button => {
+
+    button.addEventListener("click", async () => {
+
+      const orderId =
+        button.dataset.orderId;
+
+      const trackingBox =
+        button.closest(".order-tracking-box");
+
+      if(!trackingBox) return;
+
+      const carrier =
+        trackingBox
+          .querySelector(".order-carrier-select")
+          .value;
+
+      const trackingNumber =
+        trackingBox
+          .querySelector(".order-tracking-input")
+          .value
+          .trim();
+
+      const message =
+        trackingBox
+          .querySelector(".tracking-save-message");
+
+      if(!carrier){
+
+        message.textContent =
+          "Please select a carrier.";
+
+        return;
+      }
+
+      if(trackingNumber.length < 3){
+
+        message.textContent =
+          "Please enter a valid tracking number.";
+
+        return;
+      }
+
+      button.disabled = true;
+
+      message.textContent =
+        "Saving tracking...";
+
+      try{
+
+        const response = await fetch(
+          `/api/seller/orders/${encodeURIComponent(orderId)}/tracking`,
+          {
+            method:"PATCH",
+
+            headers:{
+              "Content-Type":"application/json"
+            },
+
+            credentials:"include",
+
+            body:JSON.stringify({
+              shipping_carrier:carrier,
+              tracking_number:trackingNumber
+            })
+          }
+        );
+
+        const data =
+          await response.json();
+
+        if(!response.ok){
+          throw new Error(
+            data.error ||
+            "Could not save tracking"
+          );
+        }
+
+        message.textContent =
+          "Tracking saved successfully.";
+
+      }catch(err){
+
+        message.textContent =
+          err.message ||
+          "Could not save tracking.";
+
+      }finally{
+
+        button.disabled = false;
+
+      }
+
     });
   });
-  }) 
+  })
 .catch(err => {
   console.error("Recent orders error:", err);
 });
