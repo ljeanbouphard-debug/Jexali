@@ -875,13 +875,107 @@ app.get('/api/checkout/verify', async (req,res)=>{
   }
 });
 app.get('/api/seller/stats', async (req,res)=>{
-if (!req.session.sellerId) return res.status(401).json({error:'Not signed in'}); const sellerId = Number(req.session.sellerId); 
- const result = await db.query(
-  'SELECT COUNT(*)::int AS sales, COALESCE(SUM(seller_earnings),0) AS seller_earnings, COALESCE(SUM(jexali_fee),0) AS jexali_fees FROM orders WHERE seller_id = $1',
-  [sellerId]
+  if(!req.session.sellerId){
+    return res.status(401).json({
+      error:'Not signed in'
+    });
+  }
+
+  const sellerId = Number(req.session.sellerId);
+
+  const result = await db.query(
+    `
+    SELECT
+      COUNT(*)::int AS sales,
+      COALESCE(SUM(seller_earnings),0) AS seller_earnings,
+      COALESCE(SUM(jexali_fee),0) AS jexali_fees
+    FROM orders
+    WHERE seller_id = $1
+    `,
+    [sellerId]
   );
- const stats = result.rows[0];
- res.json({sales:stats.sales, sellerEarnings:Number(stats.seller_earnings), jexaliFees:Number(stats.jexali_fees)});
+
+  const stats = result.rows[0];
+
+  res.json({
+    sales:stats.sales,
+    sellerEarnings:Number(stats.seller_earnings),
+    jexaliFees:Number(stats.jexali_fees)
+  });
+});
+app.get('/api/seller/orders', async (req,res)=>{
+  try{
+    if(!req.session.sellerId){
+      return res.status(401).json({
+        error:'Not signed in'
+      });
+    }
+
+    const sellerId =
+      Number(req.session.sellerId);
+
+    const result = await db.query(
+      `
+      SELECT
+        o.id,
+        o.amount,
+        o.seller_earnings,
+        o.jexali_fee,
+        o.created_at,
+
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', oi.id,
+              'product_id', oi.product_id,
+              'product_name', oi.product_name,
+              'quantity', oi.quantity,
+              'unit_price', oi.unit_price,
+              'selected_color', oi.selected_color,
+              'selected_clothing_size', oi.selected_clothing_size,
+              'selected_shoe_size', oi.selected_shoe_size,
+              'selected_waist_size', oi.selected_waist_size
+            )
+            ORDER BY oi.id
+          )
+          FILTER (WHERE oi.id IS NOT NULL),
+          '[]'::json
+        ) AS items
+
+      FROM orders o
+
+      LEFT JOIN order_items oi
+        ON oi.order_id = o.id
+
+      WHERE o.seller_id = $1
+
+      GROUP BY
+        o.id,
+        o.amount,
+        o.seller_earnings,
+        o.jexali_fee,
+        o.created_at
+
+      ORDER BY o.created_at DESC
+
+      LIMIT 50
+      `,
+      [sellerId]
+    );
+
+    res.json(result.rows);
+
+  }catch(err){
+
+    console.error(
+      "Seller orders error:",
+      err
+    );
+
+    res.status(500).json({
+      error:'Could not load seller orders'
+    });
+  }
 });
 app.post('/api/connect/create-account',async (req,res)=>{
 if (!req.session.user || req.session.user.role !== "seller") return res.status(401).json({ error: "Seller login required" });
