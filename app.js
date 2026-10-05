@@ -53,9 +53,10 @@ function cardHTML(p, seller=false){
       <div class="price">${money(p.price)}</div>
       ${seller
   ? `
-    <button class="primary share-product" data-id="${p.id}">
-      Share Product
-    </button>
+   <button class="primary share-product" data-id="${p.id}">
+  <i class="fa-solid fa-share-nodes"></i>
+  <span>Share Product</span>
+</button> 
 
     <button class="secondary remove-product" data-id="${p.id}">
       Remove listing
