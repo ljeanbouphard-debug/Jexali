@@ -491,7 +491,10 @@ if (!recentOrders) return;
             order.buyer_phone ||
             order.shipping_line1 ||
             order.shipping_city;
-
+const currentStatus =
+  ["New", "Shipped", "Delivered"].includes(order.status)
+    ? order.status
+    : "New";
           return `
             <div class="order-card">
 
@@ -507,15 +510,40 @@ if (!recentOrders) return;
                 </span>
               </div>
 
-              <div class="order-status-row">
-                <span class="order-status-label">
-                  Status
-                </span>
+  <div class="order-status-row">
 
-                <span class="order-status-badge">
-                  ${escapeHtml(order.status || "New")}
-                </span>
-              </div>
+  <span class="order-status-label">
+    Status
+  </span>
+
+  <select
+    class="order-status-select"
+    data-order-id="${order.id}"
+    data-current-status="${currentStatus}"
+  >
+    <option
+      value="New"
+      ${currentStatus === "New" ? "selected" : ""}
+    >
+      New
+    </option>
+
+    <option
+      value="Shipped"
+      ${currentStatus === "Shipped" ? "selected" : ""}
+    >
+      Shipped
+    </option>
+
+    <option
+      value="Delivered"
+      ${currentStatus === "Delivered" ? "selected" : ""}
+    >
+      Delivered
+    </option>
+  </select>
+
+</div>            
 
               ${(order.items || []).map(item => `
 
@@ -651,7 +679,74 @@ if (!recentOrders) return;
         }).join("")
   }
 `; 
-})
+
+ recentOrders
+  .querySelectorAll(".order-status-select")
+  .forEach(select => {
+
+    select.addEventListener("change", async () => {
+
+      const orderId =
+        select.dataset.orderId;
+
+      const oldStatus =
+        select.dataset.currentStatus || "New";
+
+      const newStatus =
+        select.value;
+
+      select.disabled = true;
+
+      try{
+
+        const response = await fetch(
+          `/api/seller/orders/${encodeURIComponent(orderId)}/status`,
+          {
+            method:"PATCH",
+
+            headers:{
+              "Content-Type":"application/json"
+            },
+
+            credentials:"include",
+
+            body:JSON.stringify({
+              status:newStatus
+            })
+          }
+        );
+
+        const data =
+          await response.json();
+
+        if(!response.ok){
+          throw new Error(
+            data.error ||
+            "Could not update order status"
+          );
+        }
+
+        select.dataset.currentStatus =
+          data.order?.status || newStatus;
+
+      }catch(err){
+
+        select.value = oldStatus;
+
+        alert(
+          err.message ||
+          "Could not update order status"
+        );
+
+      }finally{
+
+        select.disabled = false;
+
+      }
+
+    });
+  });
+  }) 
 .catch(err => {
   console.error("Recent orders error:", err);
 });
