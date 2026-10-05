@@ -1084,6 +1084,79 @@ app.get('/api/seller/orders', async (req,res)=>{
     });
   }
 });
+/* ===== UPDATE SELLER ORDER STATUS ===== */
+
+app.patch('/api/seller/orders/:id/status', async (req,res)=>{
+  try{
+
+    if(!req.session.sellerId){
+      return res.status(401).json({
+        error:'Not signed in'
+      });
+    }
+
+    const orderId = Number(req.params.id);
+    const sellerId = Number(req.session.sellerId);
+    const status = String(req.body.status || '').trim();
+
+    const allowedStatuses = [
+      'New',
+      'Shipped',
+      'Delivered'
+    ];
+
+    if(
+      !Number.isInteger(orderId) ||
+      !allowedStatuses.includes(status)
+    ){
+      return res.status(400).json({
+        error:'Invalid order status'
+      });
+    }
+
+    const result = await db.query(
+      `
+      UPDATE orders
+
+      SET status = $1
+
+      WHERE id = $2
+        AND seller_id = $3
+
+      RETURNING
+        id,
+        status
+      `,
+      [
+        status,
+        orderId,
+        sellerId
+      ]
+    );
+
+    if(!result.rows.length){
+      return res.status(404).json({
+        error:'Order not found'
+      });
+    }
+
+    res.json({
+      ok:true,
+      order:result.rows[0]
+    });
+
+  }catch(err){
+
+    console.error(
+      'Update order status error:',
+      err
+    );
+
+    res.status(500).json({
+      error:'Could not update order status'
+    });
+  }
+});
 app.post('/api/connect/create-account',async (req,res)=>{
 if (!req.session.user || req.session.user.role !== "seller") return res.status(401).json({ error: "Seller login required" });
 const userId = req.session.user.id; 
