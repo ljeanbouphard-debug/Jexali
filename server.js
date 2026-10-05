@@ -218,6 +218,7 @@ db.query("ALTER TABLE sellers ADD COLUMN IF NOT EXISTS user_id INTEGER UNIQUE");
 db.query("CREATE TABLE IF NOT EXISTS orders (id SERIAL PRIMARY KEY, stripe_session_id TEXT UNIQUE, seller_id INTEGER, amount REAL DEFAULT 0, seller_earnings REAL DEFAULT 0, jexali_fee REAL DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
 db.query(`
   ALTER TABLE orders
+  ADD COLUMN IF NOT EXISTS buyer_user_id INTEGER,
   ADD COLUMN IF NOT EXISTS buyer_name TEXT,
   ADD COLUMN IF NOT EXISTS buyer_email TEXT,
   ADD COLUMN IF NOT EXISTS buyer_phone TEXT,
@@ -664,16 +665,21 @@ shipping_address_collection:{
 phone_number_collection:{
   enabled:true
 },
-        metadata:{
-          seller_id:String(sellerIds[0]),
+metadata:{
+  seller_id:String(sellerIds[0]),
 
-          shipping_total_cents:
-            String(
-              Math.round(
-                shippingTotal * 100
-              )
-            )
-        },
+  buyer_user_id:
+    req.session.user?.role === "buyer"
+      ? String(req.session.user.id)
+      : "",
+
+  shipping_total_cents:
+    String(
+      Math.round(
+        shippingTotal * 100
+      )
+    )
+},        
 
         branding_settings:{
           display_name:'Jexali'
@@ -769,7 +775,10 @@ const shippingName =
   null;
     const sellerId =
       Number(session.metadata?.seller_id);
-
+const buyerUserId =
+  session.metadata?.buyer_user_id
+    ? Number(session.metadata.buyer_user_id)
+    : null;
     if(!Number.isInteger(sellerId)){
       return res.status(400).json({
         error:'Invalid seller'
@@ -797,6 +806,7 @@ const shippingName =
   INSERT INTO orders (
     stripe_session_id,
     seller_id,
+    buyer_user_id,
     amount,
     seller_earnings,
     jexali_fee,
@@ -812,14 +822,15 @@ const shippingName =
     shipping_country
   )
   VALUES (
-    $1,$2,$3,$4,$5,
-    $6,$7,$8,$9,$10,
-    $11,$12,$13,$14,$15
+    $1,$2,$3,$4,$5,$6,
+    $7,$8,$9,$10,$11,
+    $12,$13,$14,$15,$16
   )
 
   ON CONFLICT (stripe_session_id)
   DO UPDATE SET
     seller_id = EXCLUDED.seller_id,
+    buyer_user_id = EXCLUDED.buyer_user_id,
     amount = EXCLUDED.amount,
     seller_earnings = EXCLUDED.seller_earnings,
     jexali_fee = EXCLUDED.jexali_fee,
@@ -839,6 +850,7 @@ const shippingName =
   [
     session.id,
     sellerId,
+    buyerUserId,
     amount,
     sellerEarnings,
     jexaliFee,
@@ -853,7 +865,7 @@ const shippingName =
     shippingAddress.postal_code || null,
     shippingAddress.country || null
   ]
-);  
+);
 
     const orderId =
       orderResult.rows[0].id;
