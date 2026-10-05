@@ -158,7 +158,26 @@ function renderShop(){
   const q=document.getElementById("searchInput").value.toLowerCase().trim();
   const items=allProducts().filter(p=>(p.name+" "+p.category+" "+p.desc).toLowerCase().includes(q));
   document.getElementById("productGrid").innerHTML=items.length?items.map(p=>cardHTML(p)).join(""):"<p>No products found.</p>";
-  document.querySelectorAll(".add-cart").forEach(b=>b.addEventListener("click",()=>addToCart(b.dataset.id)));
+document.querySelectorAll(".add-cart").forEach(b=>{
+  b.addEventListener("click",()=>{
+    const p=allProducts().find(
+      x=>String(x.id)===String(b.dataset.id)
+    );
+
+    const hasOptions = p && (
+      (Array.isArray(p.colors) && p.colors.length > 0) ||
+      (Array.isArray(p.clothing_sizes) && p.clothing_sizes.length > 0) ||
+      (Array.isArray(p.shoe_sizes) && p.shoe_sizes.length > 0) ||
+      (Array.isArray(p.waist_sizes) && p.waist_sizes.length > 0)
+    );
+
+    if(hasOptions){
+      openProductModal(b.dataset.id);
+    }else{
+      addToCart(b.dataset.id);
+    }
+  });
+});
 }
 document.getElementById("searchInput").addEventListener("input",renderShop);
 function getSelectedProductOptions(){
