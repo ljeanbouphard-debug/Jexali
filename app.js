@@ -394,7 +394,109 @@ function renderDashboard(){
 fetch('/api/seller/products').then(res=>res.json()).then(products=>{if(products.error) return; document.getElementById("listingCount").textContent=products.length; document.getElementById("sellerListings").innerHTML=products.length? products.map(p=>cardHTML(p,true)).join("") : "<p>No listings yet.</p>";
 document.querySelectorAll(".remove-product").forEach(b=>b.onclick=async()=>{const id=String(b.dataset.id).replace(/^p/,""); const r=await fetch("/api/products/"+id, {method:"DELETE"});if(r.ok) {customProducts=customProducts.filter(p=>String(p.id)!==String(id));renderDashboard();}});                                                                   
    }); 
+fetch("/api/seller/orders", {
+  credentials: "include"
+})
+.then(res => res.json())
+.then(data => {
 
+  const orders = Array.isArray(data)
+    ? data
+    : (data.orders || []);
+
+  let recentOrders = document.getElementById("recentOrders");
+
+  if (!recentOrders) {
+    recentOrders = document.createElement("div");
+    recentOrders.id = "recentOrders";
+    recentOrders.className = "recent-orders";
+
+    document.getElementById("dashboard").appendChild(recentOrders);
+  }
+
+  recentOrders.innerHTML = `
+    <h2>Recent Orders</h2>
+
+    ${
+      orders.length === 0
+        ? `<p>No orders yet.</p>`
+        : orders.map(order => `
+
+          <div class="order-card">
+
+            <div class="order-header">
+              <strong>Order #${order.id}</strong>
+
+              <span>
+                ${
+                  order.created_at
+                    ? new Date(order.created_at).toLocaleString()
+                    : ""
+                }
+              </span>
+            </div>
+
+            ${(order.items || []).map(item => `
+
+              <div class="order-item">
+
+                <strong>
+                  ${item.product_name || "Product"}
+                </strong>
+
+                <p>
+                  Quantity: ${item.quantity || 1}
+                </p>
+
+                ${
+                  item.selected_color
+                    ? `<p>Color: ${item.selected_color}</p>`
+                    : ""
+                }
+
+                ${
+                  item.selected_clothing_size
+                    ? `<p>Size: ${item.selected_clothing_size}</p>`
+                    : ""
+                }
+
+                ${
+                  item.selected_shoe_size
+                    ? `<p>Shoe Size: ${item.selected_shoe_size}</p>`
+                    : ""
+                }
+
+                ${
+                  item.selected_waist_size
+                    ? `<p>Waist Size: ${item.selected_waist_size}</p>`
+                    : ""
+                }
+
+                ${
+                  item.unit_price != null
+                    ? `<p>Price: ${money(item.unit_price)}</p>`
+                    : ""
+                }
+
+              </div>
+
+            `).join("")}
+
+            ${
+              order.amount != null
+                ? `<p><strong>Order Total: ${money(order.amount)}</strong></p>`
+                : ""
+            }
+
+          </div>
+
+        `).join("")
+    }
+  `;
+})
+.catch(err => {
+  console.error("Recent orders error:", err);
+});
 
   
   
