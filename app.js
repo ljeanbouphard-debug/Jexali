@@ -1112,9 +1112,9 @@ function renderBuyerOrders(){
               </p>
             </div>
 
-            <span class="buyer-order-status">
-              ${escapeHtml(order.status || "New")}
-            </span>
+    <span class="buyer-order-status status-${String(order.status || "New").toLowerCase()}">
+  ${escapeHtml(order.status || "New")}
+</span>        
 
           </div>
 
