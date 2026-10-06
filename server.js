@@ -199,6 +199,7 @@ app.get('/api/stripe-test', async (req,res) => {
 } 
 });
 db.query("CREATE TABLE IF NOT EXISTS products (id SERIAL PRIMARY KEY, name TEXT, price REAL, seller TEXT, stock INTEGER DEFAULT 0)");
+db.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS processing_days INTEGER DEFAULT 1");
 db.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS category TEXT, ADD COLUMN IF NOT EXISTS image TEXT, ADD COLUMN IF NOT EXISTS description TEXT");
 db.query("Alter TABLE products ADD COLUMN IF NOT EXISTS shipping_fee REAL DEFAULT 0");
 db.query(`
@@ -289,15 +290,16 @@ const sellerRow = { id:Number(req.session.sellerId) };
     stock,
     category,
     image,
-    description,
+   description,
     shipping_fee,
+    processing_days,
     colors,
     clothing_sizes,
     shoe_sizes,
     waist_sizes
   )
   VALUES (
-    $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13
+    $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14
   )
   RETURNING id`,
   [
@@ -308,8 +310,9 @@ const sellerRow = { id:Number(req.session.sellerId) };
     p.stock || 0,
     p.category,
     p.image,
-    p.description,
+        p.description,
     Number(p.shipping_fee) || 0,
+    Math.max(1, Number(p.processing_days) || 1),
     JSON.stringify(Array.isArray(p.colors) ? p.colors : []),
     JSON.stringify(Array.isArray(p.clothing_sizes) ? p.clothing_sizes : []),
     JSON.stringify(Array.isArray(p.shoe_sizes) ? p.shoe_sizes : []),
