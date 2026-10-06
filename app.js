@@ -320,6 +320,8 @@ document.getElementById("productForm").addEventListener("submit",async e=>{
   const price=Number(document.getElementById("pPrice").value);
   const stock=Number(document.getElementById("pStock").value);
   const shippingFee=Number(document.getElementById("pShipping").value) || 0;
+ const processingDays =
+  Number(document.getElementById("pProcessingDays").value) || 1; 
   const category=document.getElementById("pCategory").value;
   const colors = document.getElementById("pColors").value
   .split(",")
@@ -371,6 +373,7 @@ if(!name || !desc || !(price>0) || ! Number.isInteger(stock) || stock<0){documen
   price,
   stock,
   shipping_fee:shippingFee,
+   processing_days:processingDays, 
   category,
   image,
   desc,
@@ -388,6 +391,7 @@ if(!name || !desc || !(price>0) || ! Number.isInteger(stock) || stock<0){documen
   price:price,
   stock:stock,
   shipping_fee:shippingFee,
+   processing_days:processingDays,     
   category:category,
   image:image,
   description:desc,
