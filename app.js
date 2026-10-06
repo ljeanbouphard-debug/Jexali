@@ -388,16 +388,12 @@ if(!name || !desc || !(price>0) || ! Number.isInteger(stock) || stock<0){documen
   shoe_sizes:shoeSizes,
   waist_sizes:waistSizes
 };
-  const response=await fetch("/api/products",{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    
-      body:JSON.stringify({
+ const productPayload = {
   name:name,
   price:price,
   stock:stock,
   shipping_fee:shippingFee,
-   processing_days:processingDays,     
+  processing_days:processingDays,
   category:category,
   image:image,
   description:desc,
@@ -405,16 +401,85 @@ if(!name || !desc || !(price>0) || ! Number.isInteger(stock) || stock<0){documen
   clothing_sizes:clothingSizes,
   shoe_sizes:shoeSizes,
   waist_sizes:waistSizes
-})
-  });
-if (!response.ok) { const err=await response.json(); alert(err.error || "Product could not be saved"); return; }
-  const data=await response.json();p.id=data.id; 
+};
+
+const isEditing =
+  editingProductId !== null;
+
+const editedId =
+  editingProductId;
+
+const response = await fetch(
+  isEditing
+    ? `/api/products/${encodeURIComponent(editedId)}`
+    : "/api/products",
+  {
+    method:isEditing ? "PATCH" : "POST",
+
+    headers:{
+      "Content-Type":"application/json"
+    },
+
+    body:JSON.stringify(productPayload)
+  }
+);
+
+const data = await response.json();
+
+if(!response.ok){
+  alert(
+    data.error ||
+    (isEditing
+      ? "Product could not be updated"
+      : "Product could not be saved")
+  );
+
+  return;
+}
+
+if(isEditing){
+
+  const updatedProduct = {
+    ...data.product,
+    desc:data.product?.description || ""
+  };
+
+  customProducts =
+    customProducts.map(product =>
+      String(product.id) === String(editedId)
+        ? updatedProduct
+        : product
+    );
+
+  editingProductId = null;
+
+  document.getElementById("formMsg").textContent =
+    "Product updated successfully.";
+
+}else{
+
+  p.id = data.id;
+
   customProducts.unshift(p);
-  localStorage.setItem("jexaliProducts",JSON.stringify(customProducts));
-  e.target.reset();
-  photoFileName.textContent = "No file selected";
-  document.getElementById("formMsg").textContent="Product published successfully.";
-  setTimeout(()=>go("dashboard"),500);
+
+  document.getElementById("formMsg").textContent =
+    "Product published successfully.";
+}
+
+localStorage.setItem(
+  "jexaliProducts",
+  JSON.stringify(customProducts)
+);
+
+e.target.reset();
+
+photoFileName.textContent =
+  "No file selected";
+
+setTimeout(
+  ()=>go("dashboard"),
+  500
+); 
 });
 
 function renderDashboard(){
