@@ -322,6 +322,169 @@ const sellerRow = { id:Number(req.session.sellerId) };
  const newID = r.rows[0].id;
 res.status(201).json({id:newID});
 });
+app.patch('/api/products/:id', async (req,res)=>{
+  try{
+
+    if(!req.session.sellerId){
+      return res.status(401).json({
+        error:'Not signed in'
+      });
+    }
+
+    const id = Number(req.params.id);
+
+    if(!Number.isInteger(id)){
+      return res.status(400).json({
+        error:'Invalid product id'
+      });
+    }
+
+    const p = req.body;
+
+    const name =
+      String(p.name || '').trim();
+
+    const description =
+      String(p.description || '').trim();
+
+    const price =
+      Number(p.price);
+
+    const stock =
+      Number(p.stock);
+
+    const shippingFee =
+      Number(p.shipping_fee || 0);
+
+    const processingDays =
+      Math.max(
+        1,
+        Number(p.processing_days) || 1
+      );
+
+    if(
+      !name ||
+      !description ||
+      !(price > 0) ||
+      !Number.isInteger(stock) ||
+      stock < 0
+    ){
+      return res.status(400).json({
+        error:'Invalid product information'
+      });
+    }
+
+    let image =
+      String(p.image || '').trim();
+
+    if(
+      image &&
+      /^https?:\/\//i.test(image) &&
+      !image.includes("res.cloudinary.com/")
+    ){
+      try{
+
+        image =
+          await uploadUrlToCloudinary(image);
+
+      }catch(err){
+
+        console.error(
+          "Edit product image upload failed:",
+          err.message
+        );
+
+        return res.status(400).json({
+          error:'Could not save product image'
+        });
+      }
+    }
+
+    const result = await db.query(
+      `
+      UPDATE products
+
+      SET
+        name = $1,
+        price = $2,
+        stock = $3,
+        category = $4,
+        image = $5,
+        description = $6,
+        shipping_fee = $7,
+        processing_days = $8,
+        colors = $9,
+        clothing_sizes = $10,
+        shoe_sizes = $11,
+        waist_sizes = $12
+
+      WHERE id = $13
+        AND seller_id = $14
+
+      RETURNING *
+      `,
+      [
+        name,
+        price,
+        stock,
+        p.category,
+        image,
+        description,
+        shippingFee,
+        processingDays,
+
+        JSON.stringify(
+          Array.isArray(p.colors)
+            ? p.colors
+            : []
+        ),
+
+        JSON.stringify(
+          Array.isArray(p.clothing_sizes)
+            ? p.clothing_sizes
+            : []
+        ),
+
+        JSON.stringify(
+          Array.isArray(p.shoe_sizes)
+            ? p.shoe_sizes
+            : []
+        ),
+
+        JSON.stringify(
+          Array.isArray(p.waist_sizes)
+            ? p.waist_sizes
+            : []
+        ),
+
+        id,
+        Number(req.session.sellerId)
+      ]
+    );
+
+    if(!result.rows.length){
+      return res.status(404).json({
+        error:'Product not found'
+      });
+    }
+
+    res.json({
+      ok:true,
+      product:result.rows[0]
+    });
+
+  }catch(err){
+
+    console.error(
+      "Edit product error:",
+      err
+    );
+
+    res.status(500).json({
+      error:'Could not update product'
+    });
+  }
+});
 app.delete('/api/products/:id', async (req,res)=>{if (!req.session.sellerId) return res.status(401).json({error:'Not signed in'}); const id = Number(req.params.id); if (!Number.isInteger(id)) return res.status(400).json({error:'Invalid product id'}); const result = await db.query('DELETE FROM products WHERE id = $1 AND seller_id = $2 RETURNING id', [id, Number(req.session.sellerId)]); if (result.rows.length === 0) return res.status(404).json({error:'Product not found'}); res.json({ok:true,id:result.rows[0].id});});
 app.post('/api/checkout', async (req,res)=>{
   try{
