@@ -4500,7 +4500,30 @@ footer{
     font-size:13px;
   }
 }
+/* ===== SHOP MOBILE WIDER PRODUCT CARDS ===== */
 
+@media(max-width:600px){
+
+  #shop .product-grid{
+    width:calc(100% + 16px);
+    margin-left:-8px;
+    gap:8px;
+  }
+
+  #shop .card{
+    width:100%;
+    border-radius:16px;
+  }
+
+  #shop .card img,
+  #shop .card .placeholder{
+    height:170px;
+    object-fit:contain;
+    background:#f8fafc;
+    padding:5px;
+  }
+
+}
 
 
 
