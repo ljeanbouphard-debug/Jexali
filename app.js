@@ -947,6 +947,101 @@ const currentTracking =
 
  
 }
+function getTrackingUrl(carrier, trackingNumber){
+
+  const tracking = encodeURIComponent(
+    String(trackingNumber || "").trim()
+  );
+
+  if(!tracking) return "";
+
+  switch(String(carrier || "").trim().toUpperCase()){
+
+    case "USPS":
+      return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${tracking}`;
+
+    case "UPS":
+      return `https://www.ups.com/track?loc=en_US&tracknum=${tracking}`;
+
+    case "FEDEX":
+      return `https://www.fedex.com/fedextrack/?trknbr=${tracking}`;
+
+    case "DHL":
+      return `https://www.dhl.com/us-en/home/tracking.html?submit=1&tracking-id=${tracking}`;
+
+    default:
+      return "";
+  }
+}
+function buyerTrackingHTML(order){
+
+  if(!order.tracking_number){
+
+    return `
+      <div class="buyer-tracking-box tracking-pending">
+
+        <div>
+          <strong>Tracking not available yet</strong>
+
+          <p>
+            The seller will add tracking information
+            after your order ships.
+          </p>
+        </div>
+
+      </div>
+    `;
+  }
+
+  const trackingUrl =
+    getTrackingUrl(
+      order.shipping_carrier,
+      order.tracking_number
+    );
+
+  return `
+    <div class="buyer-tracking-box">
+
+      <div class="buyer-tracking-info">
+
+        <div>
+          <span>Carrier</span>
+
+          <strong>
+            ${escapeHtml(
+              order.shipping_carrier || "Other"
+            )}
+          </strong>
+        </div>
+
+        <div>
+          <span>Tracking Number</span>
+
+          <strong>
+            ${escapeHtml(order.tracking_number)}
+          </strong>
+        </div>
+
+      </div>
+
+      ${
+        trackingUrl
+          ? `
+            <a
+              class="buyer-track-btn"
+              href="${trackingUrl}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Track Package
+            </a>
+          `
+          : ""
+      }
+
+    </div>
+  `;
+}
 function renderBuyerOrders(){
 
   const box =
@@ -1072,7 +1167,7 @@ function renderBuyerOrders(){
             `).join("")}
 
           </div>
-
+${buyerTrackingHTML(order)}
           ${
             order.shipping_line1 ||
             order.shipping_city
