@@ -1431,14 +1431,39 @@ fetch("/api/me").then(r=>r.ok? r.json():null).then(data=>{if(data?.stripeConnect
 
 
 
-connectStripeBtn.addEventListener("click",async()=>{
-const email = prompt("ENTER your seller email:");
-  if (!email) return;
-  const res=await fetch("/api/connect/create-account",
-{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email})});
-const data=await res.json();
+connectStripeBtn.addEventListener("click", async () => {
 
-window.location.href=data.url;
+  const email =
+    prompt("Enter your seller email:");
+
+  if(!email) return;
+
+  const res = await fetch(
+    "/api/connect/create-account",
+    {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      credentials:"include",
+      body:JSON.stringify({
+        email:email.trim()
+      })
+    }
+  );
+
+  const data = await res.json();
+
+  if(!res.ok || !data.url){
+    alert(
+      data.error ||
+      "Could not connect with Stripe."
+    );
+    return;
+  }
+
+  window.location.href = data.url;
+
 });
 
 const registerBtn = document.getElementById("registerBtn");
