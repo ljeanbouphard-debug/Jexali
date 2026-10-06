@@ -237,7 +237,8 @@ function addToCart(id, options = {}){
     selectedClothingSize: options.clothingSize || "",
     selectedShoeSize: options.shoeSize || "",
     selectedWaistSize: options.waistSize || "",
-    cartId: Date.now() + Math.random()
+quantity: 1,
+cartId: Date.now() + Math.random()
   });
 
   localStorage.setItem(
@@ -1334,7 +1335,15 @@ function renderCart(){
             }
 
           </div>
+<div class="cart-quantity">
+  <button type="button" class="qty-minus" data-i="${i}">−</button>
 
+  <span class="qty-value">
+    ${Number(p.quantity || 1)}
+  </span>
+
+  <button type="button" class="qty-plus" data-i="${i}">+</button>
+</div>
           <button data-i="${i}" class="remove-cart">
             <i class="fa-regular fa-trash-can"></i>
             Remove
@@ -1342,9 +1351,12 @@ function renderCart(){
 
         </div>
 
-        <div class="cart-item-price">
-          ${money(p.price)}
-        </div>
+    <div class="cart-item-price">
+  ${money(
+    Number(p.price) *
+    Number(p.quantity || 1)
+  )}
+</div>    
 
       </div>
     `).join("")
@@ -1357,9 +1369,14 @@ function renderCart(){
     `;
 
   const subtotal=cart.reduce(
-    (s,p)=>s+Number(p.price),
-    0
-  );
+  (s,p)=>
+    s +
+    (
+      Number(p.price) *
+      Number(p.quantity || 1)
+    ),
+  0
+);
 
   const uniqueShippingProducts=new Map();
 
@@ -1399,6 +1416,63 @@ function renderCart(){
       updateCartCount();
       renderCart();
     }));
+  document.querySelectorAll(".qty-plus")
+  .forEach(button=>{
+    button.addEventListener("click",()=>{
+
+      const i = Number(button.dataset.i);
+      const product = cart[i];
+
+      if(!product) return;
+
+      const currentQty =
+        Number(product.quantity || 1);
+
+      const stock =
+        Number(product.stock || 0);
+
+      if(stock > 0 && currentQty >= stock){
+        alert("You cannot add more than the available stock.");
+        return;
+      }
+
+      product.quantity =
+        currentQty + 1;
+
+      localStorage.setItem(
+        "jexaliCart",
+        JSON.stringify(cart)
+      );
+
+      renderCart();
+    });
+  });
+
+document.querySelectorAll(".qty-minus")
+  .forEach(button=>{
+    button.addEventListener("click",()=>{
+
+      const i = Number(button.dataset.i);
+      const product = cart[i];
+
+      if(!product) return;
+
+      const currentQty =
+        Number(product.quantity || 1);
+
+      if(currentQty <= 1) return;
+
+      product.quantity =
+        currentQty - 1;
+
+      localStorage.setItem(
+        "jexaliCart",
+        JSON.stringify(cart)
+      );
+
+      renderCart();
+    });
+  });
 }
 document.getElementById("checkoutBtn").addEventListener("click",()=>{
   if(!cart.length){alert("Your cart is empty.");return;}
