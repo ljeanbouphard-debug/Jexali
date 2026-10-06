@@ -4423,7 +4423,83 @@ footer{
     font-size:14px;
   }
 }
+/* ===== SHOP MOBILE 2 COLUMN GRID ===== */
 
+@media(max-width:600px){
+
+  #shop .product-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
+
+  #shop .card{
+    min-width:0;
+    border-radius:16px;
+  }
+
+  #shop .card img,
+  #shop .card .placeholder{
+    width:100%;
+    height:155px;
+    object-fit:cover;
+  }
+
+  #shop .card-body{
+    padding:12px;
+  }
+
+  #shop .card .category{
+    margin-bottom:6px;
+    padding:4px 7px;
+    font-size:9px;
+  }
+
+  #shop .card h3{
+    margin:4px 0 6px;
+    font-size:14px;
+    line-height:1.25;
+  }
+
+  #shop .card p{
+    min-height:32px;
+    margin:5px 0;
+    font-size:11px;
+    line-height:1.35;
+  }
+
+  #shop .card .price{
+    margin:8px 0;
+    font-size:16px;
+  }
+
+  #shop .card .primary{
+    width:100%;
+    margin-top:8px;
+    padding:10px 7px;
+    border-radius:10px;
+    font-size:11px;
+  }
+}
+
+@media(max-width:380px){
+
+  #shop .product-grid{
+    gap:8px;
+  }
+
+  #shop .card img,
+  #shop .card .placeholder{
+    height:135px;
+  }
+
+  #shop .card-body{
+    padding:10px;
+  }
+
+  #shop .card h3{
+    font-size:13px;
+  }
+}
 
 
 
