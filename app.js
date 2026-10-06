@@ -96,6 +96,8 @@ function openProductModal(id){
 
   document.getElementById("modalProductPrice").textContent =
     money(p.price);
+  document.getElementById("modalProcessingTime").textContent =
+  `Processing time: ${Number(p.processing_days || 1)} business day${Number(p.processing_days || 1) === 1 ? "" : "s"}`;
   const optionSets = [
     {
       groupId: "modalColorGroup",
