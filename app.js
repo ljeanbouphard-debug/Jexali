@@ -36,6 +36,18 @@ const money=n=>"$"+Number(n).toFixed(2);
 function go(view){
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
   document.getElementById(view).classList.add("active");
+  if(view === "sell" && editingProductId === null){
+
+  const submitButton =
+    document.querySelector(
+      '#productForm button[type="submit"]'
+    );
+
+  if(submitButton){
+    submitButton.textContent =
+      "Publish Product";
+  }
+}
   window.scrollTo({top:0,behavior:"smooth"});
   if(view==="shop") renderShop();
   if(view==="dashboard") renderDashboard();
@@ -568,6 +580,15 @@ setCheckedOptions(
   "pWaistSizes",
   product.waist_sizes
 );   
+ const submitButton =
+  document.querySelector(
+    '#productForm button[type="submit"]'
+  );
+
+if(submitButton){
+  submitButton.textContent =
+    "Update Product";
+}     
       go("sell");
     });
 
