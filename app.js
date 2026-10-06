@@ -1042,6 +1042,43 @@ function buyerTrackingHTML(order){
     </div>
   `;
 }
+function buyerOrderTimelineHTML(status){
+
+  const currentStatus =
+    String(status || "New").toLowerCase();
+
+  const isShipped =
+    currentStatus === "shipped" ||
+    currentStatus === "delivered";
+
+  const isDelivered =
+    currentStatus === "delivered";
+
+  return `
+    <div class="buyer-order-timeline">
+
+      <div class="timeline-step active">
+        <div class="timeline-dot"></div>
+        <span>Order Placed</span>
+      </div>
+
+      <div class="timeline-line ${isShipped ? "active" : ""}"></div>
+
+      <div class="timeline-step ${isShipped ? "active" : ""}">
+        <div class="timeline-dot"></div>
+        <span>Shipped</span>
+      </div>
+
+      <div class="timeline-line ${isDelivered ? "active" : ""}"></div>
+
+      <div class="timeline-step ${isDelivered ? "active" : ""}">
+        <div class="timeline-dot"></div>
+        <span>Delivered</span>
+      </div>
+
+    </div>
+  `;
+}
 function renderBuyerOrders(){
 
   const box =
@@ -1115,7 +1152,7 @@ function renderBuyerOrders(){
     <span class="buyer-order-status status-${String(order.status || "New").toLowerCase()}">
   ${escapeHtml(order.status || "New")}
 </span>        
-
+${buyerOrderTimelineHTML(order.status)}
           </div>
 
           <div class="buyer-order-items">
