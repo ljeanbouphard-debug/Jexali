@@ -58,7 +58,10 @@ function cardHTML(p, seller=false){
   <i class="fa-solid fa-share-nodes"></i>
   <span>Share Product</span>
 </button> 
-
+<button class="secondary edit-product" data-id="${p.id}">
+  <i class="fa-regular fa-pen-to-square"></i>
+  Edit Product
+</button>
     <button class="secondary remove-product" data-id="${p.id}">
       Remove listing
     </button>
@@ -72,7 +75,7 @@ function cardHTML(p, seller=false){
 }
 function escapeHtml(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
 let activeProduct = null;
-
+let editingProductId = null;
 function openProductModal(id){
   const p = allProducts().find(
     product => String(product.id) === String(id)
@@ -426,6 +429,84 @@ function renderDashboard(){
   });
 fetch('/api/seller/products').then(res=>res.json()).then(products=>{if(products.error) return; document.getElementById("listingCount").textContent=products.length; document.getElementById("sellerListings").innerHTML=products.length? products.map(p=>cardHTML(p,true)).join("") : "<p>No listings yet.</p>";
 document.querySelectorAll(".remove-product").forEach(b=>b.onclick=async()=>{const id=String(b.dataset.id).replace(/^p/,""); const r=await fetch("/api/products/"+id, {method:"DELETE"});if(r.ok) {customProducts=customProducts.filter(p=>String(p.id)!==String(id));renderDashboard();}}); 
+ document.querySelectorAll(".edit-product")
+  .forEach(button => {
+
+    button.addEventListener("click", () => {
+
+      const id = button.dataset.id;
+
+      const product = products.find(
+        p => String(p.id) === String(id)
+      );
+
+      if(!product) return;
+
+      editingProductId = product.id;
+document.getElementById("pName").value =
+  product.name || "";
+
+document.getElementById("pPrice").value =
+  product.price ?? "";
+
+document.getElementById("pStock").value =
+  product.stock ?? 0;
+
+document.getElementById("pShipping").value =
+  product.shipping_fee ?? 0;
+
+document.getElementById("pProcessingDays").value =
+  product.processing_days || 1;
+
+document.getElementById("pCategory").value =
+  product.category || "";
+
+document.getElementById("pImage").value =
+  product.image || "";
+
+document.getElementById("pDesc").value =
+  product.description || product.desc || "";
+
+document.getElementById("pColors").value =
+  Array.isArray(product.colors)
+    ? product.colors.join(", ")
+    : "";
+   const setCheckedOptions = (containerId, values) => {
+
+  const selectedValues = new Set(
+    (Array.isArray(values) ? values : [])
+      .map(String)
+  );
+
+  document.querySelectorAll(
+    `#${containerId} input[type="checkbox"]`
+  ).forEach(input => {
+
+    input.checked =
+      selectedValues.has(String(input.value));
+
+  });
+
+};
+
+setCheckedOptions(
+  "pClothingSizes",
+  product.clothing_sizes
+);
+
+setCheckedOptions(
+  "pShoeSizes",
+  product.shoe_sizes
+);
+
+setCheckedOptions(
+  "pWaistSizes",
+  product.waist_sizes
+);   
+      go("sell");
+    });
+
+  });                                                                   
    document.querySelectorAll(".share-product").forEach(button => {
 
   button.onclick = async () => {
