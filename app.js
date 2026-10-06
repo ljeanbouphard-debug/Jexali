@@ -266,7 +266,16 @@ cartId: Date.now() + Math.random()
   
 
 
-function updateCartCount(){document.getElementById("cartCount").textContent=cart.length;}
+function updateCartCount(){
+  const totalItems = cart.reduce(
+    (sum,p) =>
+      sum + Number(p.quantity || 1),
+    0
+  );
+
+  document.getElementById("cartCount").textContent =
+    totalItems;
+}
 const modalAddToCartBtn = document.getElementById("modalAddToCart");
 
 if(modalAddToCartBtn){
@@ -1640,6 +1649,7 @@ document.querySelectorAll(".qty-minus")
       renderCart();
     });
   });
+  updateCartCount();
 }
 document.getElementById("checkoutBtn").addEventListener("click",()=>{
   if(!cart.length){alert("Your cart is empty.");return;}
