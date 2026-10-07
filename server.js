@@ -1,6 +1,6 @@
 require('dotenv').config();
 const { Pool } = require('pg');
-const cors = require('cors')
+
 const express = require('express');
 const session = require("express-session");
 const bcrypt = require("bcryptjs");
@@ -63,7 +63,7 @@ this.pool.query(
 db.query(`CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, role TEXT NOT NULL CHECK (role IN ('buyer', 'seller')), created_at TIMESTAMPTZ DEFAULT NOW())`).catch(console.error);
 const app = express();
 app.set('trust proxy', 1);
-app.use(cors());
+
 async function fulfillCheckoutSession(sessionId){
 
   const checkoutSession =
