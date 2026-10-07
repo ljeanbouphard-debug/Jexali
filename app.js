@@ -59,17 +59,7 @@ document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",(
 function cardHTML(p, seller=false){
   return `<article class="card" data-product-id="${p.id}">
     ${p.image?`<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" class="product-image-clickable">`:`<div class="placeholder">🛍️</div>`}
- ${!seller ? `
-  <button
-    type="button"
-    class="product-share-btn"
-    data-id="${p.id}"
-    title="Share product"
-    aria-label="Share product"
-  >
-    <i class="fa-solid fa-share-nodes"></i>
-  </button>
-` : ""}   
+  
     <div class="card-body">
       <div class="category">${escapeHtml(p.category)}</div>
       <h3>${escapeHtml(p.name)}</h3>
