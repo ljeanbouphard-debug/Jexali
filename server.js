@@ -62,28 +62,425 @@ db.query(`CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name TEXT NOT
 const app = express();
 app.set('trust proxy', 1);
 app.use(cors());
-app.post('/api/stripe-webhook',express.raw({type:'application/json'}),async (req,res)=>{
-const sig = req.headers['stripe-signature'];
+async function fulfillCheckoutSession(sessionId){
 
- 
-let event; 
-try { 
-event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET); 
-} catch (err) { 
-return res.status(400).send(`webhook Error: ${err.message}`); 
-} 
-if (event.type === 'checkout.session.completed') { 
-const session = event.data.object;
-const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {limit:100,expand:['data.price.product']});
-for (const item of lineItems.data) { 
-const productId= Number(item.price.product.metadata.product_id); 
-const quantity = item.quantity || 1;
-if (!Number.isInteger(productId)) continue; 
-await db.query('UPDATE products SET stock = GREATEST(stock - $1, 0) WHERE id = $2', [quantity, productId]); 
-} 
+  const checkoutSession =
+    await stripe.checkout.sessions.retrieve(sessionId);
+
+  if(checkoutSession.payment_status !== "paid"){
+    throw new Error("Payment not completed");
+  }
+
+  const sellerId =
+    Number(checkoutSession.metadata?.seller_id);
+
+  if(!Number.isInteger(sellerId)){
+    throw new Error("Invalid seller");
+  }
+
+  const rawBuyerUserId =
+    checkoutSession.metadata?.buyer_user_id
+      ? Number(checkoutSession.metadata.buyer_user_id)
+      : null;
+
+  const buyerUserId =
+    Number.isInteger(rawBuyerUserId)
+      ? rawBuyerUserId
+      : null;
+
+  const customerDetails =
+    checkoutSession.customer_details || {};
+
+  const shippingDetails =
+    checkoutSession.collected_information?.shipping_details ||
+    checkoutSession.shipping_details ||
+    {};
+
+  const shippingAddress =
+    shippingDetails.address ||
+    customerDetails.address ||
+    {};
+
+  const buyerName =
+    shippingDetails.name ||
+    customerDetails.name ||
+    null;
+
+  const buyerEmail =
+    customerDetails.email || null;
+
+  const buyerPhone =
+    customerDetails.phone || null;
+
+  const shippingName =
+    shippingDetails.name ||
+    customerDetails.name ||
+    null;
+
+  const amountTotalCents =
+    Number(checkoutSession.amount_total || 0);
+
+  const shippingCents =
+    Number(
+      checkoutSession.metadata?.shipping_total_cents || 0
+    );
+
+  const productSubtotalCents =
+    Math.max(
+      0,
+      amountTotalCents - shippingCents
+    );
+
+  const jexaliFeeCents =
+    Math.round(
+      productSubtotalCents * 0.10
+    );
+
+  const sellerEarningsCents =
+    amountTotalCents - jexaliFeeCents;
+
+  const amount =
+    amountTotalCents / 100;
+
+  const jexaliFee =
+    jexaliFeeCents / 100;
+
+  const sellerEarnings =
+    sellerEarningsCents / 100;
+
+  const lineItems =
+    await stripe.checkout.sessions.listLineItems(
+      checkoutSession.id,
+      {
+        limit:100,
+        expand:["data.price.product"]
+      }
+    );
+
+  const client =
+    await db.connect();
+
+  try{
+
+    await client.query("BEGIN");
+
+    /*
+      stripe_session_id is UNIQUE.
+      This prevents the same checkout
+      from being processed twice.
+    */
+
+    const orderInsert =
+      await client.query(
+        `
+        INSERT INTO orders (
+          stripe_session_id,
+          seller_id,
+          buyer_user_id,
+          amount,
+          seller_earnings,
+          jexali_fee,
+          buyer_name,
+          buyer_email,
+          buyer_phone,
+          shipping_name,
+          shipping_line1,
+          shipping_line2,
+          shipping_city,
+          shipping_state,
+          shipping_postal_code,
+          shipping_country
+        )
+
+        VALUES (
+          $1,$2,$3,$4,$5,$6,
+          $7,$8,$9,$10,$11,
+          $12,$13,$14,$15,$16
+        )
+
+        ON CONFLICT (stripe_session_id)
+        DO NOTHING
+
+        RETURNING id
+        `,
+        [
+          checkoutSession.id,
+          sellerId,
+          buyerUserId,
+          amount,
+          sellerEarnings,
+          jexaliFee,
+          buyerName,
+          buyerEmail,
+          buyerPhone,
+          shippingName,
+          shippingAddress.line1 || null,
+          shippingAddress.line2 || null,
+          shippingAddress.city || null,
+          shippingAddress.state || null,
+          shippingAddress.postal_code || null,
+          shippingAddress.country || null
+        ]
+      );
+
+    /*
+      If this Stripe session was already
+      processed, do not remove stock again.
+    */
+
+    if(orderInsert.rows.length === 0){
+
+      const existingOrder =
+        await client.query(
+          `
+          SELECT
+            id,
+            seller_earnings,
+            jexali_fee
+          FROM orders
+          WHERE stripe_session_id = $1
+          `,
+          [checkoutSession.id]
+        );
+
+      await client.query("COMMIT");
+
+      return {
+        ok:true,
+        alreadyProcessed:true,
+        orderId:existingOrder.rows[0]?.id,
+        sellerEarnings:
+          Number(
+            existingOrder.rows[0]?.seller_earnings || 0
+          ),
+        jexaliFee:
+          Number(
+            existingOrder.rows[0]?.jexali_fee || 0
+          )
+      };
+    }
+
+    const orderId =
+      orderInsert.rows[0].id;
+
+    for(const item of lineItems.data){
+
+      const stripeProduct =
+        item.price?.product;
+
+      if(
+        !stripeProduct ||
+        typeof stripeProduct !== "object"
+      ){
+        continue;
+      }
+
+      const metadata =
+        stripeProduct.metadata || {};
+
+      const productId =
+        Number(metadata.product_id);
+
+      /*
+        Shipping has no product_id,
+        so it is skipped here.
+      */
+
+      if(!Number.isInteger(productId)){
+        continue;
+      }
+
+      const quantity =
+        Number(item.quantity || 1);
+
+      if(
+        !Number.isInteger(quantity) ||
+        quantity < 1
+      ){
+        throw new Error(
+          "Invalid purchased quantity"
+        );
+      }
+
+      /*
+        Remove stock safely.
+        It cannot go below zero.
+      */
+
+      const stockUpdate =
+        await client.query(
+          `
+          UPDATE products
+
+          SET stock = stock - $1
+
+          WHERE id = $2
+            AND stock >= $1
+
+          RETURNING id
+          `,
+          [
+            quantity,
+            productId
+          ]
+        );
+
+      if(stockUpdate.rows.length === 0){
+        throw new Error(
+          `Insufficient stock for product ${productId}`
+        );
+      }
+
+      const unitPrice =
+        Number(
+          item.price?.unit_amount || 0
+        ) / 100;
+
+      await client.query(
+        `
+        INSERT INTO order_items (
+          order_id,
+          product_id,
+          product_name,
+          quantity,
+          unit_price,
+          selected_color,
+          selected_clothing_size,
+          selected_shoe_size,
+          selected_waist_size,
+          stripe_line_item_id
+        )
+
+        VALUES (
+          $1,$2,$3,$4,$5,
+          $6,$7,$8,$9,$10
+        )
+
+        ON CONFLICT DO NOTHING
+        `,
+        [
+          orderId,
+          productId,
+          stripeProduct.name ||
+            item.description ||
+            "Product",
+          quantity,
+          unitPrice,
+          metadata.selected_color || null,
+          metadata.selected_clothing_size || null,
+          metadata.selected_shoe_size || null,
+          metadata.selected_waist_size || null,
+          item.id
+        ]
+      );
+    }
+
+    await client.query("COMMIT");
+
+    return {
+      ok:true,
+      alreadyProcessed:false,
+      orderId,
+      sellerEarnings,
+      jexaliFee
+    };
+
+  }catch(err){
+
+    await client.query("ROLLBACK");
+    throw err;
+
+  }finally{
+
+    client.release();
+
+  }
 }
-res.json({received:true}); 
-}); 
+app.post(
+  '/api/stripe-webhook',
+  express.raw({type:'application/json'}),
+  async (req,res)=>{
+
+    const sig =
+      req.headers['stripe-signature'];
+
+    let event;
+
+    try{
+
+      event =
+        stripe.webhooks.constructEvent(
+          req.body,
+          sig,
+          process.env.STRIPE_WEBHOOK_SECRET
+        );
+
+    }catch(err){
+
+      console.error(
+        "Webhook signature error:",
+        err.message
+      );
+
+      return res.status(400).send(
+        `Webhook Error: ${err.message}`
+      );
+    }
+
+    try{
+
+      if(
+        event.type ===
+          'checkout.session.completed' ||
+
+        event.type ===
+          'checkout.session.async_payment_succeeded'
+      ){
+
+        const checkoutSession =
+          event.data.object;
+
+        /*
+          Only fulfill when payment
+          is actually paid.
+        */
+
+        if(
+          checkoutSession.payment_status ===
+          'paid'
+        ){
+
+          await fulfillCheckoutSession(
+            checkoutSession.id
+          );
+
+        }
+      }
+
+      res.json({
+        received:true
+      });
+
+    }catch(err){
+
+      console.error(
+        "Webhook fulfillment error:",
+        err
+      );
+
+      /*
+        Return 500 so Stripe can retry
+        if fulfillment failed.
+      */
+
+      res.status(500).json({
+        error:
+          "Webhook fulfillment failed"
+      });
+
+    }
+  }
+);
  app.use(express.json());
 
 app.post("/api/register", async (req, res)=> {try {const { name, email, password, role } = req.body; if (!name || !email || !password || ! ["buyer", "seller"].includes(role)) { return res.status(400).json({ error: "Invalid registration information" }); } const normalizedEmail = email.trim().toLowerCase(); const passwordHash = await bcrypt.hash(password, 12); const result = await db.query(`INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role`, [name.trim(), normalizedEmail, passwordHash, role]); res.json({ success: true, user: result.rows[0] }); } catch (err) { if (err.code === "23505") { return res.status(409).json({ error: "An account with this email already exists" });} console.error(err); res.status(500).json({ error: "Could not create account" });} });
@@ -896,8 +1293,11 @@ metadata:{
 });
 app.get('/api/checkout/verify', async (req,res)=>{
   try{
+
     const sessionId =
-      String(req.query.session_id || '');
+      String(
+        req.query.session_id || ''
+      ).trim();
 
     if(!sessionId){
       return res.status(400).json({
@@ -905,220 +1305,21 @@ app.get('/api/checkout/verify', async (req,res)=>{
       });
     }
 
-    const session =
-      await stripe.checkout.sessions.retrieve(
+    const result =
+      await fulfillCheckoutSession(
         sessionId
       );
-
-    if(session.payment_status !== 'paid'){
-      return res.status(400).json({
-        error:'Payment not completed'
-      });
-    }
-const customerDetails =
-  session.customer_details || {};
-
-const shippingDetails =
-  session.shipping_details || {};
-
-const shippingAddress =
-  shippingDetails.address ||
-  customerDetails.address ||
-  {};
-
-const buyerName =
-  shippingDetails.name ||
-  customerDetails.name ||
-  null;
-
-const buyerEmail =
-  customerDetails.email || null;
-
-const buyerPhone =
-  customerDetails.phone || null;
-
-const shippingName =
-  shippingDetails.name ||
-  customerDetails.name ||
-  null;
-    const sellerId =
-      Number(session.metadata?.seller_id);
-const buyerUserId =
-  session.metadata?.buyer_user_id
-    ? Number(session.metadata.buyer_user_id)
-    : null;
-    if(!Number.isInteger(sellerId)){
-      return res.status(400).json({
-        error:'Invalid seller'
-      });
-    }
-
-    const amount =
-      Number(session.amount_total || 0) / 100;
-
-    const shippingAmount =
-      Number(
-        session.metadata?.shipping_total_cents || 0
-      ) / 100;
-
-    const jexaliFee =
-      (amount - shippingAmount) * 0.10;
-
-    const sellerEarnings =
-      amount - jexaliFee;
-
-    /* Create or reuse the order */
-
-  const orderResult = await db.query(
-  `
-  INSERT INTO orders (
-    stripe_session_id,
-    seller_id,
-    buyer_user_id,
-    amount,
-    seller_earnings,
-    jexali_fee,
-    buyer_name,
-    buyer_email,
-    buyer_phone,
-    shipping_name,
-    shipping_line1,
-    shipping_line2,
-    shipping_city,
-    shipping_state,
-    shipping_postal_code,
-    shipping_country
-  )
-  VALUES (
-    $1,$2,$3,$4,$5,$6,
-    $7,$8,$9,$10,$11,
-    $12,$13,$14,$15,$16
-  )
-
-  ON CONFLICT (stripe_session_id)
-  DO UPDATE SET
-    seller_id = EXCLUDED.seller_id,
-    buyer_user_id = EXCLUDED.buyer_user_id,
-    amount = EXCLUDED.amount,
-    seller_earnings = EXCLUDED.seller_earnings,
-    jexali_fee = EXCLUDED.jexali_fee,
-    buyer_name = EXCLUDED.buyer_name,
-    buyer_email = EXCLUDED.buyer_email,
-    buyer_phone = EXCLUDED.buyer_phone,
-    shipping_name = EXCLUDED.shipping_name,
-    shipping_line1 = EXCLUDED.shipping_line1,
-    shipping_line2 = EXCLUDED.shipping_line2,
-    shipping_city = EXCLUDED.shipping_city,
-    shipping_state = EXCLUDED.shipping_state,
-    shipping_postal_code = EXCLUDED.shipping_postal_code,
-    shipping_country = EXCLUDED.shipping_country
-
-  RETURNING id
-  `,
-  [
-    session.id,
-    sellerId,
-    buyerUserId,
-    amount,
-    sellerEarnings,
-    jexaliFee,
-    buyerName,
-    buyerEmail,
-    buyerPhone,
-    shippingName,
-    shippingAddress.line1 || null,
-    shippingAddress.line2 || null,
-    shippingAddress.city || null,
-    shippingAddress.state || null,
-    shippingAddress.postal_code || null,
-    shippingAddress.country || null
-  ]
-);
-
-    const orderId =
-      orderResult.rows[0].id;
-
-    /* Get Stripe products and their options */
-
-    const lineItems =
-      await stripe.checkout.sessions.listLineItems(
-        session.id,
-        {
-          limit:100,
-          expand:['data.price.product']
-        }
-      );
-
-    for(const item of lineItems.data){
-
-      const stripeProduct =
-        item.price?.product;
-
-      if(
-        !stripeProduct ||
-        typeof stripeProduct !== 'object'
-      ){
-        continue;
-      }
-
-      const metadata =
-        stripeProduct.metadata || {};
-
-      const productId =
-        Number(metadata.product_id);
-
-      /* Shipping has no product_id */
-      if(!Number.isInteger(productId)){
-        continue;
-      }
-
-      const quantity =
-        Number(item.quantity || 1);
-
-      const unitPrice =
-        Number(item.price?.unit_amount || 0) / 100;
-
-      await db.query(
-        `
-        INSERT INTO order_items (
-          order_id,
-          product_id,
-          product_name,
-          quantity,
-          unit_price,
-          selected_color,
-          selected_clothing_size,
-          selected_shoe_size,
-          selected_waist_size,
-          stripe_line_item_id
-        )
-        VALUES (
-          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10
-        )
-        ON CONFLICT DO NOTHING
-        `,
-        [
-          orderId,
-          productId,
-          stripeProduct.name ||
-            item.description ||
-            'Product',
-          quantity,
-          unitPrice,
-          metadata.selected_color || null,
-          metadata.selected_clothing_size || null,
-          metadata.selected_shoe_size || null,
-          metadata.selected_waist_size || null,
-          item.id
-        ]
-      );
-    }
 
     res.json({
       ok:true,
       sales:1,
-      sellerEarnings,
-      jexaliFee
+      orderId:result.orderId,
+      alreadyProcessed:
+        !!result.alreadyProcessed,
+      sellerEarnings:
+        result.sellerEarnings,
+      jexaliFee:
+        result.jexaliFee
     });
 
   }catch(err){
@@ -1128,9 +1329,21 @@ const buyerUserId =
       err
     );
 
+    if(
+      err.message ===
+        "Payment not completed" ||
+      err.message ===
+        "Invalid seller"
+    ){
+      return res.status(400).json({
+        error:err.message
+      });
+    }
+
     res.status(500).json({
       error:'Could not verify checkout'
     });
+
   }
 });
 app.get('/api/seller/stats', async (req,res)=>{
