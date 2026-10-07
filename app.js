@@ -1651,32 +1651,216 @@ document.querySelectorAll(".qty-minus")
   });
   updateCartCount();
 }
-document.getElementById("checkoutBtn").addEventListener("click",()=>{
-  if(!cart.length){alert("Your cart is empty.");return;}
-fetch('/api/checkout',{
-method:'POST',
-headers:{ 'Content-Type' :'application/json'},
-body:JSON.stringify({cart})
-})
-.then(res=>res.json())
-.then(data=>{if(data.error) {alert(data.error);return;} window.location.href=data.url;});
+const checkoutBtn =
+  document.getElementById("checkoutBtn");
+
+checkoutBtn.addEventListener("click", async () => {
+
+  if(!cart.length){
+    alert("Your cart is empty.");
+    return;
+  }
+
+  const originalText =
+    checkoutBtn.textContent;
+
+  checkoutBtn.disabled = true;
+  checkoutBtn.textContent =
+    "Processing...";
+
+  try{
+
+    const response = await fetch(
+      "/api/checkout",
+      {
+        method:"POST",
+
+        headers:{
+          "Content-Type":"application/json"
+        },
+
+        body:JSON.stringify({
+          cart
+        })
+      }
+    );
+
+    const data =
+      await response.json();
+
+    if(!response.ok || data.error){
+      throw new Error(
+        data.error ||
+        "Could not start checkout."
+      );
+    }
+
+    if(!data.url){
+      throw new Error(
+        "Checkout link was not received."
+      );
+    }
+
+    window.location.href =
+      data.url;
+
+  }catch(err){
+
+    alert(
+      err.message ||
+      "Could not start checkout."
+    );
+
+    checkoutBtn.disabled = false;
+    checkoutBtn.textContent =
+      originalText;
+  }
+
 });
 
 updateCartCount();
 renderShop();
 
-const params=new URLSearchParams(window.location.search);
-if(params.get("success")==="1"){
- const sessionId=params.get("session_id");
+const params =
+  new URLSearchParams(window.location.search);
+
+if(params.get("success") === "1"){
+
+  const sessionId =
+    params.get("session_id");
+
   if(sessionId){
-    fetch("/api/checkout/verify?session_id="+encodeURIComponent(sessionId))
-      .then(res=>res.json())
-    .then(data=>{
-      if(data.ok) alert("Thank you for your purchase!");
+
+    fetch(
+      "/api/checkout/verify?session_id=" +
+      encodeURIComponent(sessionId)
+    )
+    .then(async res => {
+
+      const data =
+        await res.json();
+
+      if(!res.ok || !data.ok){
+        throw new Error(
+          data.error ||
+          "Could not verify payment."
+        );
+      }
+
+      return data;
+    })
+    .then(async () => {
+
+      /*
+        Payment is confirmed.
+        Empty the buyer cart.
+      */
+
+      cart = [];
+
+      localStorage.removeItem(
+        "jexaliCart"
+      );
+
+      updateCartCount();
+      renderCart();
+
+      /*
+        Refresh products so updated
+        stock appears immediately.
+      */
+
+      try{
+
+        const response =
+          await fetch("/api/products");
+
+        const products =
+          await response.json();
+
+        if(
+          response.ok &&
+          Array.isArray(products)
+        ){
+          customProducts = products;
+          renderShop();
+        }
+
+      }catch(err){
+
+        console.error(
+          "Product refresh error:",
+          err
+        );
+
+      }
+
+      /*
+        Remove Stripe success parameters
+        so refresh will not show the
+        success message again.
+      */
+
+      const cleanUrl =
+        new URL(window.location.href);
+
+      cleanUrl.searchParams.delete(
+        "success"
+      );
+
+      cleanUrl.searchParams.delete(
+        "session_id"
+      );
+
+      window.history.replaceState(
+        {},
+        document.title,
+        cleanUrl.pathname +
+        cleanUrl.search +
+        cleanUrl.hash
+      );
+
+      alert(
+        "Thank you for your purchase!"
+      );
+
+    })
+    .catch(err => {
+
+      console.error(
+        "Checkout verification error:",
+        err
+      );
+
+      alert(
+        err.message ||
+        "Could not verify payment."
+      );
+
     });
+
   }
 }
-if(params.get("canceled")==="1")alert("Payment canceled.");
+
+if(params.get("canceled") === "1"){
+
+  const cleanUrl =
+    new URL(window.location.href);
+
+  cleanUrl.searchParams.delete(
+    "canceled"
+  );
+
+  window.history.replaceState(
+    {},
+    document.title,
+    cleanUrl.pathname +
+    cleanUrl.search +
+    cleanUrl.hash
+  );
+
+  alert("Payment canceled.");
+}
 
 let stripeConnected=false;
 const connectStripeBtn=document.getElementById("connectStripeBtn");
