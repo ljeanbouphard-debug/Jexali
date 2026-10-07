@@ -15,7 +15,7 @@ api_secret:
  process.env.CLOUDINARY_API_SECRET
 });
 const stripe = require('stripe') (process.env.STRIPE_SECRET_KEY);
-const stripeTest = require('stripe') (process.env.STRIPE_TEST_SECRET_KEY);
+
 
 const db = new Pool({connectionString: process.env.DATABASE_URL });
 class PgSessionStore extends session.Store {
@@ -579,22 +579,10 @@ res.json({ success: true })
 }); 
 }); 
 app.use(express.static(__dirname));
-app.get('/api/key-length', (req, res) => {
- res.json({ length:
-  process.env.STRIPE_SECRET_KEY ?
-  process.env.STRIPE_SECRET_KEY.length :
-  0 });
-});
-app.get('/api/test-key-info', (req,res)=> {const key = process.env.STRIPE_TEST_SECRET_KEY || ''; res.json({exists: !!key, length: key.length,startsWithSkTest: key.startsWith('sk_test_'),hasWhitespace: /\s/.test(key),lastCharCode: key.length ? key.charCodeAt(key.length - 1) : null });});
 
-app.get('/api/stripe-test', async (req,res) => {
- try { const account = await stripeTest.accounts.retrieve();
-      res.json({ ok: true, id: account.id });
-     } catch (err) {
-  res.status(500).json({ ok: false,
-   error: err.message });                     
-} 
-});
+
+
+
 db.query("CREATE TABLE IF NOT EXISTS products (id SERIAL PRIMARY KEY, name TEXT, price REAL, seller TEXT, stock INTEGER DEFAULT 0)");
 db.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS processing_days INTEGER DEFAULT 1");
 db.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS category TEXT, ADD COLUMN IF NOT EXISTS image TEXT, ADD COLUMN IF NOT EXISTS description TEXT");
