@@ -15,7 +15,9 @@ api_secret:
  process.env.CLOUDINARY_API_SECRET
 });
 const stripe = require('stripe') (process.env.STRIPE_SECRET_KEY);
-
+const BASE_URL =
+  process.env.BASE_URL ||
+  'https://jexali.onrender.com';
 
 const db = new Pool({connectionString: process.env.DATABASE_URL });
 class PgSessionStore extends session.Store {
@@ -1256,11 +1258,11 @@ metadata:{
           : {}
         ),
 
-        success_url:
-          'https://jexali.onrender.com/?success=1&session_id={CHECKOUT_SESSION_ID}',
+      success_url:
+  `${BASE_URL}/?success=1&session_id={CHECKOUT_SESSION_ID}`,
 
-        cancel_url:
-          'https://jexali.onrender.com/?canceled=1'
+cancel_url:
+  `${BASE_URL}/?canceled=1`  
       });
 
     res.json({
@@ -1759,8 +1761,8 @@ req.session.sellerId = existingSeller ? existingSeller.id : (await db.query('SEL
 await new Promise((resolve, reject) => req.session.save(err => err ? reject(err) : resolve()));
  const link = await stripe.accountLinks.create({
 account: account.id,
-refresh_url: 'https://jexali.onrender.com',
-return_url: 'https://jexali.onrender.com',
+refresh_url: BASE_URL,
+return_url: BASE_URL,
 type: 'account_onboarding',
 });
 res.json({url: link.url, accountId: account.id});
