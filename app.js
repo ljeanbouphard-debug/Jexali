@@ -208,7 +208,54 @@ document.addEventListener("click", e => {
     }
   }
 });
+document.addEventListener("click", async e => {
 
+  const button =
+    e.target.closest(".product-share-btn");
+
+  if(!button) return;
+
+  const id = button.dataset.id;
+
+  const product =
+    allProducts().find(
+      p => String(p.id) === String(id)
+    );
+
+  if(!product) return;
+
+  const productUrl =
+    `${window.location.origin}/?product=${encodeURIComponent(id)}`;
+
+  const shareData = {
+    title: product.name,
+    text: `Check out ${product.name} on Jexali`,
+    url: productUrl
+  };
+
+  try{
+
+    if(navigator.share){
+
+      await navigator.share(shareData);
+
+    }else{
+
+      await navigator.clipboard.writeText(productUrl);
+
+      alert("Product link copied!");
+
+    }
+
+  }catch(err){
+
+    if(err.name !== "AbortError"){
+      console.error("Share error:", err);
+    }
+
+  }
+
+});
 document.getElementById("closeProductModal")
   .addEventListener("click", () => {
     document.getElementById("productModal")
