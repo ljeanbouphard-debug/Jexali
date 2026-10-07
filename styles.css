@@ -4647,7 +4647,45 @@ footer{
 .product-share-btn:active{
   transform:scale(.95);
 }
+.modal-share-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
 
+  padding:12px 18px;
+  margin-top:14px;
+  margin-right:8px;
+
+  border:1px solid #d1d5db;
+  border-radius:10px;
+
+  background:#ffffff;
+  color:#111827;
+
+  font-size:15px;
+  font-weight:600;
+
+  cursor:pointer;
+
+  transition:
+    background .2s ease,
+    border-color .2s ease,
+    transform .15s ease;
+}
+
+.modal-share-btn i{
+  font-size:16px;
+}
+
+.modal-share-btn:hover{
+  background:#f3f4f6;
+  border-color:#9ca3af;
+}
+
+.modal-share-btn:active{
+  transform:scale(.97);
+}
 
 
 
