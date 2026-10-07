@@ -98,8 +98,11 @@ function openProductModal(id){
 
   activeProduct = p;
 
-  document.getElementById("modalProductImage").src =
-    p.image || "";
+document.getElementById("modalProductImage")
+  .classList.remove("zoomed");
+
+document.getElementById("modalProductImage").src =
+  p.image || "";
 
   document.getElementById("modalProductName").textContent =
     p.name || "";
@@ -248,7 +251,23 @@ document.addEventListener("click", e => {
     }
   }
 });
+const modalProductImage =
+  document.getElementById("modalProductImage");
 
+if(modalProductImage){
+
+  modalProductImage.addEventListener(
+    "click",
+    () => {
+
+      modalProductImage.classList.toggle(
+        "zoomed"
+      );
+
+    }
+  );
+
+}
 document.getElementById("closeProductModal")
   .addEventListener("click", () => {
     document.getElementById("productModal")
