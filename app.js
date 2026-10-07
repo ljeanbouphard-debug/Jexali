@@ -62,7 +62,7 @@ function cardHTML(p, seller=false){
     <div class="card-body">
       <div class="category">${escapeHtml(p.category)}</div>
       <h3>${escapeHtml(p.name)}</h3>
-      <p>${escapeHtml(p.desc)}</p>
+      <p>${escapeHtml(p.desc || p.description || "")}</p>
       <div class="price">${money(p.price)}</div>
       ${seller
   ? `
@@ -111,6 +111,22 @@ function openProductModal(id){
 
   document.getElementById("modalProductPrice").textContent =
     money(p.price);
+  const modalAddToCart =
+  document.getElementById("modalAddToCart");
+
+if(modalAddToCart){
+
+  const outOfStock =
+    Number(p.stock || 0) <= 0;
+
+  modalAddToCart.disabled =
+    outOfStock;
+
+  modalAddToCart.textContent =
+    outOfStock
+      ? "Out of Stock"
+      : "Add to Cart";
+}
   document.getElementById("modalProcessingTime").textContent =
   `Processing time: ${Number(p.processing_days || 1)} business day${Number(p.processing_days || 1) === 1 ? "" : "s"}`;
   const optionSets = [
@@ -199,7 +215,15 @@ document.querySelector(".product-modal-overlay")
   });
 function renderShop(){
   const q=document.getElementById("searchInput").value.toLowerCase().trim();
-  const items=allProducts().filter(p=>(p.name+" "+p.category+" "+p.desc).toLowerCase().includes(q));
+  const items = allProducts().filter(p =>
+  (
+    (p.name || "") + " " +
+    (p.category || "") + " " +
+    (p.desc || p.description || "")
+  )
+  .toLowerCase()
+  .includes(q)
+);
   document.getElementById("productGrid").innerHTML=items.length?items.map(p=>cardHTML(p)).join(""):"<p>No products found.</p>";
 document.querySelectorAll(".add-cart").forEach(b=>{
   b.addEventListener("click",()=>{
