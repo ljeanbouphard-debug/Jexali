@@ -5306,7 +5306,20 @@ footer{
   }
 
 }
+/* ===== BUYER REFUND STATUS COLORS ===== */
 
+.buyer-refund-status.refund-declined{
+  background:#fee2e2;
+  color:#b91c1c;
+  border:1px solid #fecaca;
+}
+
+.buyer-refund-status.refund-approved,
+.buyer-refund-status.refund-refunded{
+  background:#dcfce7;
+  color:#15803d;
+  border:1px solid #bbf7d0;
+}
 
 
 
