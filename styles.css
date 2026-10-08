@@ -5007,7 +5007,24 @@ footer{
   }
 
 }
+/* ===== SHOP MOBILE MORE SQUARE CARDS ===== */
 
+@media(max-width:600px){
+
+  #shop .card img,
+  #shop .card .placeholder{
+    width:100%;
+    aspect-ratio:1 / 1;
+    height:auto;
+    object-fit:contain;
+    background:#f8fafc;
+  }
+
+  #shop .card p{
+    display:none;
+  }
+
+}
 
 
 
