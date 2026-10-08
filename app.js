@@ -12,8 +12,10 @@ fetch('/api/products')
 .then(res=>res.json())
 .then(products=>{
 
-  customProducts=products;
-  renderShop();
+customProducts=products;
+
+renderShop();
+renderFeaturedProducts();  
 
   const sharedProductId =
     new URLSearchParams(window.location.search)
@@ -243,13 +245,28 @@ if(modalShareProductBtn){
 
 }
 document.addEventListener("click", e => {
-  if(e.target.classList.contains("product-image-clickable")){
-    const card = e.target.closest(".card");
 
-    if(card){
-      openProductModal(card.dataset.productId);
+  if(
+    e.target.classList.contains(
+      "product-image-clickable"
+    )
+  ){
+
+    const productElement =
+      e.target.closest(
+        "[data-product-id]"
+      );
+
+    if(productElement){
+
+      openProductModal(
+        productElement.dataset.productId
+      );
+
     }
+
   }
+
 });
 const modalProductImage =
   document.getElementById("modalProductImage");
@@ -315,6 +332,105 @@ document.querySelectorAll(".add-cart").forEach(b=>{
     }
   });
 });
+}
+function renderFeaturedProducts(){
+
+  const grid =
+    document.querySelector(".featured-grid");
+
+  if(!grid) return;
+
+  const featuredProducts =
+    allProducts().slice(0, 4);
+
+  if(featuredProducts.length === 0){
+
+    grid.innerHTML = `
+      <p>No featured products yet.</p>
+    `;
+
+    return;
+  }
+
+  grid.innerHTML =
+    featuredProducts.map(p => `
+
+      <article
+        class="featured-card"
+        data-product-id="${p.id}"
+      >
+
+        <div class="featured-image">
+
+          ${
+            p.image
+              ? `
+                <img
+                  src="${escapeHtml(p.image)}"
+                  alt="${escapeHtml(p.name)}"
+                  class="product-image-clickable"
+                >
+              `
+              : `
+                <div class="placeholder">
+                  🛍️
+                </div>
+              `
+          }
+
+        </div>
+
+        <div class="product-category">
+          ${escapeHtml(p.category || "Product")}
+        </div>
+
+        <h3>
+          ${escapeHtml(p.name)}
+        </h3>
+
+        <div class="featured-price">
+          ${money(p.price)}
+        </div>
+
+        ${
+          Number(p.stock || 0) <= 0
+            ? `
+              <button
+                type="button"
+                disabled
+              >
+                Out of Stock
+              </button>
+            `
+            : `
+              <button
+                type="button"
+                class="featured-open-product"
+                data-id="${p.id}"
+              >
+                Shop Now
+              </button>
+            `
+        }
+
+      </article>
+
+    `).join("");
+
+  grid
+    .querySelectorAll(".featured-open-product")
+    .forEach(button => {
+
+      button.addEventListener("click", () => {
+
+        openProductModal(
+          button.dataset.id
+        );
+
+      });
+
+    });
+
 }
 document.getElementById("searchInput").addEventListener("input",renderShop);
 function getSelectedProductOptions(){
