@@ -1435,7 +1435,21 @@ app.get('/api/seller/orders', async (req,res)=>{
         o.status,
 o.shipping_carrier,
 o.tracking_number,
+(
+  SELECT json_build_object(
+    'id', rr.id,
+    'reason', rr.reason,
+    'message', rr.message,
+    'status', rr.status,
+    'created_at', rr.created_at
+  )
 
+  FROM refund_requests rr
+
+  WHERE rr.order_id = o.id
+
+  LIMIT 1
+) AS refund_request,
         COALESCE(
           json_agg(
             json_build_object(
