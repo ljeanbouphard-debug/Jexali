@@ -9725,7 +9725,75 @@ footer{
     font-size:13px;
   }
 }
+/* =========================================================
+   JEXALI PREMIUM FOOTER FINAL
+   ========================================================= */
 
+footer{
+  width:100%;
+
+  margin-top:60px;
+  padding:30px 5%;
+
+  text-align:center;
+
+  border-top:1px solid rgba(255,255,255,.08);
+  border-radius:26px 26px 0 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      #07152f 0%,
+      #10264f 55%,
+      #162e5e 100%
+    );
+
+  color:#cbd5e1;
+
+  box-shadow:
+    0 -10px 30px rgba(7,21,47,.08);
+}
+
+footer p{
+  margin:0;
+
+  font-size:13px;
+  line-height:1.6;
+}
+
+footer strong{
+  color:#ffffff;
+  font-weight:900;
+}
+
+footer a{
+  color:#ffd568;
+
+  font-weight:800;
+  text-decoration:none;
+
+  transition:color .2s ease;
+}
+
+footer a:hover{
+  color:#ffffff;
+}
+
+/* MOBILE */
+
+@media(max-width:600px){
+
+  footer{
+    margin-top:40px;
+    padding:24px 18px;
+
+    border-radius:20px 20px 0 0;
+  }
+
+  footer p{
+    font-size:11px;
+  }
+}
 
 
 
