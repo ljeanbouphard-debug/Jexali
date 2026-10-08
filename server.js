@@ -1800,6 +1800,85 @@ app.post('/api/buyer/orders/:id/refund-request', async (req,res)=>{
     });
   }
 });
+/* ===== SELLER DECLINE REFUND ===== */
+
+app.patch('/api/seller/orders/:id/refund-decline', async (req,res)=>{
+  try{
+
+    if(!req.session.sellerId){
+      return res.status(401).json({
+        error:"Seller login required"
+      });
+    }
+
+    const orderId =
+      Number(req.params.id);
+
+    const sellerId =
+      Number(req.session.sellerId);
+
+    if(!Number.isInteger(orderId)){
+      return res.status(400).json({
+        error:"Invalid order"
+      });
+    }
+
+    const result =
+      await db.query(
+        `
+        UPDATE refund_requests rr
+
+        SET
+          status = 'Declined',
+          decided_at = NOW()
+
+        FROM orders o
+
+        WHERE rr.order_id = $1
+          AND rr.order_id = o.id
+          AND o.seller_id = $2
+          AND rr.status = 'Requested'
+
+        RETURNING
+          rr.id,
+          rr.order_id,
+          rr.status,
+          rr.reason,
+          rr.message,
+          rr.decided_at
+        `,
+        [
+          orderId,
+          sellerId
+        ]
+      );
+
+    if(!result.rows.length){
+      return res.status(404).json({
+        error:
+          "Refund request not found or already decided"
+      });
+    }
+
+    res.json({
+      ok:true,
+      refundRequest:
+        result.rows[0]
+    });
+
+  }catch(err){
+
+    console.error(
+      "Decline refund error:",
+      err
+    );
+
+    res.status(500).json({
+      error:
+        "Could not decline refund request"
+    });
+  }
+});
 /* ===== UPDATE SELLER ORDER STATUS ===== */
 
 app.patch('/api/seller/orders/:id/status', async (req,res)=>{
