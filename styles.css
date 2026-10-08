@@ -7476,6 +7476,489 @@ footer{
     font-size:21px;
   }
 }
+/* =========================================================
+   JEXALI PREMIUM SELL PAGE FINAL
+   ========================================================= */
+
+#sell{
+  padding-top:20px;
+}
+
+#sell .panel{
+  max-width:1080px;
+  margin:0 auto;
+  padding:30px;
+
+  border:1px solid #e5eaf1;
+  border-radius:30px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #fbfcff 100%
+    );
+
+  box-shadow:
+    0 22px 55px rgba(7,21,47,.08);
+}
+
+/* ===== SELL HERO ===== */
+
+#sell .sell-hero{
+  display:grid;
+  grid-template-columns:1.1fr .9fr;
+  gap:34px;
+  align-items:center;
+
+  margin-bottom:28px;
+  padding:32px;
+
+  border:1px solid #f0dfb9;
+  border-radius:26px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #fff9e9 0%,
+      #ffffff 55%,
+      #f3f7ff 100%
+    );
+}
+
+#sell .sell-hero-text h2{
+  margin:8px 0 12px;
+
+  color:#07152f;
+
+  font-size:38px;
+  font-weight:950;
+  letter-spacing:-1px;
+}
+
+#sell .sell-hero-text > p{
+  color:#667085;
+  line-height:1.65;
+}
+
+#sell .sell-hero-image img{
+  width:100%;
+  max-height:310px;
+
+  object-fit:contain;
+
+  border-radius:20px;
+}
+
+/* ===== SELLER BENEFITS ===== */
+
+#sell .seller-benefits{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+
+  margin:20px 0 0;
+}
+
+#sell .seller-benefits span{
+  display:inline-flex;
+  align-items:center;
+
+  padding:9px 13px;
+
+  border:1px solid #f0ddb0;
+  border-radius:999px;
+
+  background:#fff;
+
+  color:#6f5315;
+
+  font-size:12px;
+  font-weight:800;
+}
+
+#sell .seller-benefits i{
+  width:auto;
+  height:auto;
+
+  margin-right:7px;
+
+  background:none;
+  color:#d99500;
+}
+
+/* ===== FORM CARDS ===== */
+
+#sell .sell-form-card{
+  margin-top:18px;
+  padding:24px;
+
+  border:1px solid #e5eaf1;
+  border-radius:22px;
+
+  background:#fff;
+
+  box-shadow:
+    0 10px 26px rgba(7,21,47,.05);
+}
+
+#sell .sell-section-title{
+  margin-bottom:20px;
+}
+
+#sell .sell-section-title h3{
+  display:flex;
+  align-items:center;
+
+  margin:0 0 7px;
+
+  color:#07152f;
+
+  font-size:20px;
+  font-weight:900;
+}
+
+#sell .sell-section-title h3 i{
+  width:38px;
+  height:38px;
+
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  margin-right:10px;
+
+  border-radius:11px;
+
+  background:#fff5d8;
+  color:#d99500;
+}
+
+#sell .sell-section-title p{
+  margin:0;
+
+  color:#7a8393;
+
+  font-size:13px;
+}
+
+/* ===== INPUTS ===== */
+
+#sell #productForm label{
+  color:#344054;
+
+  font-size:13px;
+  font-weight:800;
+}
+
+#sell #productForm input,
+#sell #productForm select,
+#sell #productForm textarea{
+  min-height:47px;
+
+  padding:12px 14px;
+
+  border:1px solid #d9e0ea;
+  border-radius:12px;
+
+  background:#fbfcfe;
+  color:#111827;
+
+  outline:none;
+
+  transition:
+    border-color .2s ease,
+    box-shadow .2s ease,
+    background .2s ease;
+}
+
+#sell #productForm textarea{
+  min-height:125px;
+}
+
+#sell #productForm input:focus,
+#sell #productForm select:focus,
+#sell #productForm textarea:focus{
+  border-color:#2f6bff;
+
+  background:#fff;
+
+  box-shadow:
+    0 0 0 4px rgba(47,107,255,.10);
+}
+
+/* ===== ROWS ===== */
+
+#sell .sell-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+}
+
+#sell .pricing-row{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:18px;
+}
+
+/* ===== PHOTO UPLOAD ===== */
+
+#sell .photo-upload{
+  min-height:210px;
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+
+  padding:28px;
+
+  border:2px dashed #c9d5e6;
+  border-radius:18px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f7faff,
+      #ffffff
+    );
+
+  transition:
+    border-color .2s ease,
+    background .2s ease,
+    transform .2s ease;
+}
+
+#sell .photo-upload:hover{
+  border-color:#f4b522;
+
+  background:#fffaf0;
+
+  transform:translateY(-2px);
+}
+
+#sell .photo-upload > i{
+  width:58px;
+  height:58px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  margin-bottom:13px;
+
+  border-radius:16px;
+
+  background:#fff3cf;
+  color:#d99500;
+
+  font-size:25px;
+}
+
+#sell .photo-upload-text strong{
+  color:#07152f;
+
+  font-size:16px;
+}
+
+#sell .photo-upload-text small{
+  color:#7a8393;
+}
+
+/* ===== VARIANTS ===== */
+
+#sell .variant-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+}
+
+#sell .variant-field{
+  padding:18px;
+
+  border:1px solid #e2e8f0;
+  border-radius:17px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff,
+      #f8fbff
+    );
+}
+
+#sell .variant-field > span{
+  color:#07152f;
+
+  font-weight:900;
+}
+
+#sell .variant-field > span i{
+  color:#d99500;
+}
+
+/* ===== SIZE BUTTONS ===== */
+
+#sell .seller-size-options{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+
+  margin-top:8px;
+}
+
+#sell .seller-size-options label span{
+  min-width:46px;
+
+  padding:9px 11px;
+
+  border:1px solid #d9e0ea;
+  border-radius:10px;
+
+  background:#fff;
+  color:#344054;
+
+  font-size:12px;
+  font-weight:800;
+}
+
+#sell .seller-size-options input:checked + span{
+  border-color:#f4b522;
+
+  background:
+    linear-gradient(
+      135deg,
+      #f4b522,
+      #ffd568
+    );
+
+  color:#111827;
+
+  box-shadow:
+    0 6px 14px rgba(244,181,34,.20);
+}
+
+/* ===== PUBLISH BUTTON ===== */
+
+#sell #productForm > .primary{
+  width:100%;
+  min-height:54px;
+
+  margin-top:20px;
+  padding:14px 20px;
+
+  border:0;
+  border-radius:14px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #07152f,
+      #153263
+    );
+
+  color:#fff;
+
+  font-size:15px;
+  font-weight:900;
+
+  box-shadow:
+    0 12px 26px rgba(7,21,47,.20);
+
+  transition:
+    transform .2s ease,
+    box-shadow .2s ease;
+}
+
+#sell #productForm > .primary:hover{
+  transform:translateY(-2px);
+
+  background:
+    linear-gradient(
+      135deg,
+      #10264f,
+      #1c3d78
+    );
+
+  box-shadow:
+    0 16px 32px rgba(7,21,47,.25);
+}
+
+/* ================= MOBILE ================= */
+
+@media(max-width:700px){
+
+  #sell{
+    padding-top:8px;
+  }
+
+  #sell .panel{
+    padding:15px;
+
+    border-radius:21px;
+  }
+
+  #sell .sell-hero{
+    grid-template-columns:1fr;
+
+    gap:16px;
+
+    padding:20px;
+
+    border-radius:19px;
+  }
+
+  #sell .sell-hero-text h2{
+    font-size:29px;
+  }
+
+  #sell .sell-hero-image{
+    text-align:center;
+  }
+
+  #sell .sell-hero-image img{
+    max-height:220px;
+  }
+
+  #sell .seller-benefits{
+    gap:7px;
+  }
+
+  #sell .seller-benefits span{
+    padding:7px 10px;
+
+    font-size:10px;
+  }
+
+  #sell .sell-form-card{
+    padding:17px;
+
+    border-radius:17px;
+  }
+
+  #sell .sell-row,
+  #sell .pricing-row,
+  #sell .variant-grid{
+    grid-template-columns:1fr;
+  }
+
+  #sell .photo-upload{
+    min-height:180px;
+  }
+
+  #sell .sell-section-title h3{
+    font-size:17px;
+  }
+
+  #sell #productForm input,
+  #sell #productForm select,
+  #sell #productForm textarea{
+    font-size:14px;
+  }
+
+}
+
+
 
 
 
