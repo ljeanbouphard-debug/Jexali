@@ -6856,7 +6856,39 @@ footer{
     transform-origin:center;
   }
 }
+/* ===== MOBILE CATEGORY CARDS TEMU STYLE ===== */
 
+@media(max-width:600px){
+
+  #home .category-card{
+    padding:0;
+    overflow:hidden;
+  }
+
+  #home .category-photo{
+    width:100%;
+    height:185px;
+
+    margin:0 0 12px;
+
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+
+    border-radius:0;
+  }
+
+  #home .category-card h3{
+    padding:0 10px;
+    margin:0 0 10px;
+  }
+
+  #home .category-card button{
+    width:calc(100% - 20px);
+    margin:0 10px 10px;
+  }
+
+}
 
 
 
