@@ -1073,7 +1073,31 @@ ${
             `
             : ""
         }
+        ${
+          order.refund_request.status === "Requested"
+            ? `
+              <div class="seller-refund-actions">
 
+                <button
+                  type="button"
+                  class="primary approve-refund-btn"
+                  data-order-id="${order.id}"
+                >
+                  Approve Refund
+                </button>
+
+                <button
+                  type="button"
+                  class="secondary decline-refund-btn"
+                  data-order-id="${order.id}"
+                >
+                  Decline Refund
+                </button>
+
+              </div>
+            `
+            : ""
+        }
       </div>
     `
     : ""
@@ -1376,6 +1400,145 @@ ${
       }
 
     });
+  });
+  recentOrders
+  .querySelectorAll(".decline-refund-btn")
+  .forEach(button => {
+
+    button.addEventListener("click", async () => {
+
+      const orderId =
+        button.dataset.orderId;
+
+      const confirmed =
+        confirm(
+          "Are you sure you want to decline this refund request?"
+        );
+
+      if(!confirmed) return;
+
+      button.disabled = true;
+      button.textContent =
+        "Declining...";
+
+      try{
+
+        const response = await fetch(
+          `/api/seller/orders/${encodeURIComponent(orderId)}/refund-decline`,
+          {
+            method:"PATCH",
+            credentials:"include"
+          }
+        );
+
+        const data =
+          await response.json();
+
+        if(!response.ok){
+          throw new Error(
+            data.error ||
+            "Could not decline refund request"
+          );
+        }
+
+        alert(
+          "Refund request declined."
+        );
+
+        renderDashboard();
+
+      }catch(err){
+
+        alert(
+          err.message ||
+          "Could not decline refund request."
+        );
+
+        button.disabled = false;
+        button.textContent =
+          "Decline Refund";
+      }
+
+    });
+
+  });
+  recentOrders
+  .querySelectorAll(".approve-refund-btn")
+  .forEach(button => {
+
+    button.addEventListener("click", async () => {
+
+      const orderId =
+        button.dataset.orderId;
+
+      const confirmed =
+        confirm(
+          "Approve this refund?\n\n" +
+          "This will send a full refund to the customer."
+        );
+
+      if(!confirmed) return;
+
+      const actions =
+        button.closest(
+          ".seller-refund-actions"
+        );
+
+      const actionButtons =
+        actions
+          ? actions.querySelectorAll("button")
+          : [button];
+
+      actionButtons.forEach(btn => {
+        btn.disabled = true;
+      });
+
+      button.textContent =
+        "Processing Refund...";
+
+      try{
+
+        const response = await fetch(
+          `/api/seller/orders/${encodeURIComponent(orderId)}/refund-approve`,
+          {
+            method:"POST",
+            credentials:"include"
+          }
+        );
+
+        const data =
+          await response.json();
+
+        if(!response.ok){
+          throw new Error(
+            data.error ||
+            "Could not process refund"
+          );
+        }
+
+        alert(
+          "Refund processed successfully."
+        );
+
+        renderDashboard();
+
+      }catch(err){
+
+        alert(
+          err.message ||
+          "Could not process refund."
+        );
+
+        actionButtons.forEach(btn => {
+          btn.disabled = false;
+        });
+
+        button.textContent =
+          "Approve Refund";
+      }
+
+    });
+
   });
   })
 .catch(err => {
