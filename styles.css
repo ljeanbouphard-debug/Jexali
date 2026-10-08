@@ -5025,6 +5025,34 @@ footer{
   }
 
 }
+/* ===== SHOP MOBILE BIGGER PRODUCT IMAGE ===== */
+
+@media(max-width:600px){
+
+  #shop .card img{
+    transform:scale(1.10);
+    transform-origin:center;
+  }
+
+}
+/* ===== FEATURED PRODUCTS MOBILE BIGGER IMAGES ===== */
+
+@media(max-width:600px){
+
+  .featured-image{
+    height:105px;
+  }
+
+  .featured-image img{
+    object-fit:contain;
+    transform:scale(1.10);
+    transform-origin:center;
+    background:#f8fafc;
+  }
+
+}
+
+
 
 
 
