@@ -1879,6 +1879,148 @@ app.patch('/api/seller/orders/:id/refund-decline', async (req,res)=>{
     });
   }
 });
+/* ===== SELLER APPROVE REFUND ===== */
+
+app.post('/api/seller/orders/:id/refund-approve', async (req,res)=>{
+  try{
+
+    if(!req.session.sellerId){
+      return res.status(401).json({
+        error:"Seller login required"
+      });
+    }
+
+    const orderId =
+      Number(req.params.id);
+
+    const sellerId =
+      Number(req.session.sellerId);
+
+    if(!Number.isInteger(orderId)){
+      return res.status(400).json({
+        error:"Invalid order"
+      });
+    }
+
+    const result =
+      await db.query(
+        `
+        SELECT
+          o.id,
+          o.stripe_session_id,
+          rr.id AS refund_request_id,
+          rr.status AS refund_status
+
+        FROM orders o
+
+        JOIN refund_requests rr
+          ON rr.order_id = o.id
+
+        WHERE o.id = $1
+          AND o.seller_id = $2
+          AND rr.status = 'Requested'
+        `,
+        [
+          orderId,
+          sellerId
+        ]
+      );
+
+    if(!result.rows.length){
+      return res.status(404).json({
+        error:
+          "Refund request not found or already decided"
+      });
+    }
+
+    const order =
+      result.rows[0];
+
+    const checkoutSession =
+      await stripe.checkout.sessions.retrieve(
+        order.stripe_session_id
+      );
+
+    const paymentIntentId =
+      typeof checkoutSession.payment_intent === "string"
+        ? checkoutSession.payment_intent
+        : checkoutSession.payment_intent?.id;
+
+    if(!paymentIntentId){
+      return res.status(400).json({
+        error:
+          "Payment information was not found"
+      });
+    }
+
+    const refund =
+      await stripe.refunds.create(
+        {
+          payment_intent:
+            paymentIntentId,
+
+          reverse_transfer:true,
+
+          refund_application_fee:true
+        },
+        {
+          idempotencyKey:
+            `jexali-refund-order-${orderId}`
+        }
+      );
+
+    const updateResult =
+      await db.query(
+        `
+        UPDATE refund_requests
+
+        SET
+          status = 'Refunded',
+          stripe_refund_id = $1,
+          decided_at = NOW()
+
+        WHERE id = $2
+          AND status = 'Requested'
+
+        RETURNING
+          id,
+          order_id,
+          status,
+          stripe_refund_id,
+          decided_at
+        `,
+        [
+          refund.id,
+          order.refund_request_id
+        ]
+      );
+
+    if(!updateResult.rows.length){
+      return res.status(409).json({
+        error:
+          "Refund was already processed"
+      });
+    }
+
+    res.json({
+      ok:true,
+      refundRequest:
+        updateResult.rows[0]
+    });
+
+  }catch(err){
+
+    console.error(
+      "Approve refund error:",
+      err
+    );
+
+    res.status(500).json({
+      error:
+        "Could not process refund"
+    });
+  }
+});
 /* ===== UPDATE SELLER ORDER STATUS ===== */
 
 app.patch('/api/seller/orders/:id/status', async (req,res)=>{
