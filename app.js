@@ -1039,6 +1039,45 @@ const currentTracking =
   ></p>
 
 </div>
+${
+  order.refund_request
+    ? `
+      <div class="seller-refund-request">
+
+        <div class="seller-refund-header">
+          <strong>Refund Requested</strong>
+
+          <span>
+            ${escapeHtml(
+              order.refund_request.status || "Requested"
+            )}
+          </span>
+        </div>
+
+        <p>
+          <strong>Reason:</strong>
+          ${escapeHtml(
+            order.refund_request.reason || ""
+          )}
+        </p>
+
+        ${
+          order.refund_request.message
+            ? `
+              <p>
+                <strong>Customer message:</strong>
+                ${escapeHtml(
+                  order.refund_request.message
+                )}
+              </p>
+            `
+            : ""
+        }
+
+      </div>
+    `
+    : ""
+}
               ${(order.items || []).map(item => `
 
                 <div class="order-item">
@@ -1484,6 +1523,61 @@ function buyerOrderTimelineHTML(status){
     </div>
   `;
 }
+function buyerRefundHTML(order){
+
+  if(order.refund_request){
+
+    return `
+      <div class="buyer-refund-status">
+        <strong>
+          Refund ${escapeHtml(
+            order.refund_request.status || "Requested"
+          )}
+        </strong>
+
+        <p>
+          Reason:
+          ${escapeHtml(
+            order.refund_request.reason || ""
+          )}
+        </p>
+      </div>
+    `;
+  }
+
+  if(
+    order.status !== "Delivered" ||
+    !order.delivered_at
+  ){
+    return "";
+  }
+
+  const deliveredTime =
+    new Date(order.delivered_at).getTime();
+
+  const deadline =
+    deliveredTime +
+    7 * 24 * 60 * 60 * 1000;
+
+  if(Date.now() > deadline){
+
+    return `
+      <div class="buyer-refund-expired">
+        Refund request period has expired.
+      </div>
+    `;
+  }
+
+  return `
+    <button
+      type="button"
+      class="buyer-refund-btn"
+      data-order-id="${order.id}"
+    >
+      Request Refund
+    </button>
+  `;
+}
 function renderBuyerOrders(){
 
   const box =
@@ -1610,6 +1704,7 @@ ${buyerOrderTimelineHTML(order.status)}
 
           </div>
 ${buyerTrackingHTML(order)}
+${buyerRefundHTML(order)}
           ${
             order.shipping_line1 ||
             order.shipping_city
@@ -1667,7 +1762,87 @@ ${buyerTrackingHTML(order)}
       `;
 
     }).join("");
+box
+  .querySelectorAll(".buyer-refund-btn")
+  .forEach(button => {
 
+    button.addEventListener("click", async () => {
+
+      const orderId =
+        button.dataset.orderId;
+
+      const reason =
+        prompt(
+          "Refund reason:\n\n" +
+          "Wrong item\n" +
+          "Damaged item\n" +
+          "Item not as described\n" +
+          "Other\n\n" +
+          "Type one exactly as shown:"
+        );
+
+      if(!reason) return;
+
+      const message =
+        prompt(
+          "Add a message for the seller (optional):"
+        ) || "";
+
+      button.disabled = true;
+      button.textContent =
+        "Sending Request...";
+
+      try{
+
+        const response = await fetch(
+          `/api/buyer/orders/${encodeURIComponent(orderId)}/refund-request`,
+          {
+            method:"POST",
+
+            headers:{
+              "Content-Type":"application/json"
+            },
+
+            credentials:"include",
+
+            body:JSON.stringify({
+              reason:reason.trim(),
+              message:message.trim()
+            })
+          }
+        );
+
+        const data =
+          await response.json();
+
+        if(!response.ok){
+          throw new Error(
+            data.error ||
+            "Could not submit refund request"
+          );
+        }
+
+        alert(
+          "Refund request submitted successfully."
+        );
+
+        renderBuyerOrders();
+
+      }catch(err){
+
+        alert(
+          err.message ||
+          "Could not submit refund request."
+        );
+
+        button.disabled = false;
+        button.textContent =
+          "Request Refund";
+      }
+
+    });
+
+  });
   })
   .catch(err => {
 
