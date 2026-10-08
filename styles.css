@@ -5175,9 +5175,49 @@ footer{
 
   cursor:zoom-out;
 }
+/* ===== CATEGORY ZOOM MOBILE FINAL ===== */
 
+@media(max-width:600px){
 
+  .category-photo.category-zoomed{
+    width:94vw;
+    height:72vh;
 
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+
+    background-size:contain;
+    background-position:center;
+    background-repeat:no-repeat;
+
+    border-radius:20px;
+    padding:10px;
+  }
+
+}
+/* ===== SHOP MOBILE IMAGE SIZE FINAL BOOST ===== */
+
+@media(max-width:600px){
+
+  #shop .card img{
+    transform:scale(1.42);
+  }
+
+}
+/* ===== FEATURED PRODUCTS MOBILE IMAGE SIZE FINAL BOOST ===== */
+
+@media(max-width:600px){
+
+  .featured-image{
+    height:220px;
+  }
+
+  .featured-image img{
+    transform:scale(1.42);
+  }
+
+}
 
 
 
