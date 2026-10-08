@@ -1691,7 +1691,11 @@ function buyerRefundHTML(order){
   if(order.refund_request){
 
     return `
-      <div class="buyer-refund-status">
+    <div
+  class="buyer-refund-status refund-${String(
+    order.refund_request.status || "Requested"
+  ).toLowerCase()}"
+>  
         <strong>
           Refund ${escapeHtml(
             order.refund_request.status || "Requested"
