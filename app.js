@@ -285,6 +285,18 @@ if(modalProductImage){
   );
 
 }
+document.querySelectorAll(".category-photo")
+  .forEach(photo => {
+
+    photo.addEventListener("click", () => {
+
+      photo.classList.toggle(
+        "category-zoomed"
+      );
+
+    });
+
+  });
 document.getElementById("closeProductModal")
   .addEventListener("click", () => {
     document.getElementById("productModal")
