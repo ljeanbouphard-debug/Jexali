@@ -618,6 +618,7 @@ db.query(`
   ADD COLUMN IF NOT EXISTS shipping_postal_code TEXT,
   ADD COLUMN IF NOT EXISTS shipping_country TEXT,
   ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'New',
+  ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ,
 ADD COLUMN IF NOT EXISTS tracking_number TEXT,
 ADD COLUMN IF NOT EXISTS shipping_carrier TEXT
 `).catch(console.error);
@@ -653,7 +654,41 @@ db.query(`
 )
 .catch(console.error);
 
+/* ===== REFUND REQUESTS ===== */
 
+db.query(`
+  CREATE TABLE IF NOT EXISTS refund_requests (
+    id SERIAL PRIMARY KEY,
+
+    order_id INTEGER NOT NULL UNIQUE
+      REFERENCES orders(id)
+      ON DELETE CASCADE,
+
+    buyer_user_id INTEGER NOT NULL,
+
+    reason TEXT NOT NULL,
+
+    message TEXT,
+
+    status TEXT NOT NULL
+      DEFAULT 'Requested'
+      CHECK (
+        status IN (
+          'Requested',
+          'Approved',
+          'Declined',
+          'Refunded'
+        )
+      ),
+
+    stripe_refund_id TEXT,
+
+    created_at TIMESTAMPTZ
+      DEFAULT NOW(),
+
+    decided_at TIMESTAMPTZ
+  )
+`).catch(console.error);
 db.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS seller_id INTEGER");
 app.post('/api/products', async (req,res)=>{
 const p = req.body
@@ -1492,12 +1527,27 @@ app.get('/api/buyer/orders', async (req,res)=>{
       `
       SELECT
         o.id,
-        o.amount,
-        o.created_at,
-        o.status,
+o.amount,
+o.created_at,
+o.status,
+o.delivered_at,
 o.shipping_carrier,
 o.tracking_number,
+(
+  SELECT json_build_object(
+    'id', rr.id,
+    'reason', rr.reason,
+    'message', rr.message,
+    'status', rr.status,
+    'created_at', rr.created_at
+  )
 
+  FROM refund_requests rr
+
+  WHERE rr.order_id = o.id
+
+  LIMIT 1
+) AS refund_request,
         o.shipping_name,
         o.shipping_line1,
         o.shipping_line2,
@@ -1534,9 +1584,10 @@ o.tracking_number,
 
       GROUP BY
         o.id,
-        o.amount,
-        o.created_at,
-        o.status,
+o.amount,
+o.created_at,
+o.status,
+o.delivered_at,
 o.shipping_carrier,
 o.tracking_number,
 
@@ -1566,6 +1617,172 @@ o.tracking_number,
 
     res.status(500).json({
       error:"Could not load your orders"
+    });
+  }
+});
+/* ===== BUYER REQUEST REFUND ===== */
+
+app.post('/api/buyer/orders/:id/refund-request', async (req,res)=>{
+  try{
+
+    if(
+      !req.session.user ||
+      req.session.user.role !== "buyer"
+    ){
+      return res.status(401).json({
+        error:"Buyer login required"
+      });
+    }
+
+    const orderId =
+      Number(req.params.id);
+
+    const buyerUserId =
+      Number(req.session.user.id);
+
+    const reason =
+      String(req.body.reason || "").trim();
+
+    const message =
+      String(req.body.message || "").trim();
+
+    const allowedReasons = [
+      "Wrong item",
+      "Damaged item",
+      "Item not as described",
+      "Other"
+    ];
+
+    if(!Number.isInteger(orderId)){
+      return res.status(400).json({
+        error:"Invalid order"
+      });
+    }
+
+    if(!allowedReasons.includes(reason)){
+      return res.status(400).json({
+        error:"Please select a valid refund reason"
+      });
+    }
+
+    if(message.length > 1000){
+      return res.status(400).json({
+        error:"Refund message is too long"
+      });
+    }
+
+    const orderResult =
+      await db.query(
+        `
+        SELECT
+          id,
+          status,
+          delivered_at
+
+        FROM orders
+
+        WHERE id = $1
+          AND buyer_user_id = $2
+        `,
+        [
+          orderId,
+          buyerUserId
+        ]
+      );
+
+    if(!orderResult.rows.length){
+      return res.status(404).json({
+        error:"Order not found"
+      });
+    }
+
+    const order =
+      orderResult.rows[0];
+
+    if(
+      order.status !== "Delivered" ||
+      !order.delivered_at
+    ){
+      return res.status(400).json({
+        error:
+          "Refund requests are available only after delivery"
+      });
+    }
+
+    const refundDeadline =
+      new Date(
+        new Date(order.delivered_at).getTime() +
+        7 * 24 * 60 * 60 * 1000
+      );
+
+    if(Date.now() > refundDeadline.getTime()){
+      return res.status(400).json({
+        error:
+          "The 7-day refund request period has expired"
+      });
+    }
+
+    const existingRequest =
+      await db.query(
+        `
+        SELECT id
+        FROM refund_requests
+        WHERE order_id = $1
+        `,
+        [orderId]
+      );
+
+    if(existingRequest.rows.length){
+      return res.status(409).json({
+        error:
+          "A refund request already exists for this order"
+      });
+    }
+
+    const result =
+      await db.query(
+        `
+        INSERT INTO refund_requests (
+          order_id,
+          buyer_user_id,
+          reason,
+          message
+        )
+
+        VALUES ($1,$2,$3,$4)
+
+        RETURNING
+          id,
+          order_id,
+          reason,
+          message,
+          status,
+          created_at
+        `,
+        [
+          orderId,
+          buyerUserId,
+          reason,
+          message || null
+        ]
+      );
+
+    res.status(201).json({
+      ok:true,
+      refundRequest:
+        result.rows[0]
+    });
+
+  }catch(err){
+
+    console.error(
+      "Refund request error:",
+      err
+    );
+
+    res.status(500).json({
+      error:
+        "Could not submit refund request"
     });
   }
 });
@@ -1603,10 +1820,18 @@ app.patch('/api/seller/orders/:id/status', async (req,res)=>{
       `
       UPDATE orders
 
-      SET status = $1
+SET
+  status = $1,
 
-      WHERE id = $2
-        AND seller_id = $3
+  delivered_at =
+    CASE
+      WHEN $1 = 'Delivered'
+      THEN COALESCE(delivered_at, NOW())
+      ELSE delivered_at
+    END
+
+WHERE id = $2
+  AND seller_id = $3
 
       RETURNING
         id,
