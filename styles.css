@@ -9794,7 +9794,88 @@ footer a:hover{
     font-size:11px;
   }
 }
+/* =========================================================
+   JEXALI FINAL MOBILE POLISH
+   ========================================================= */
 
+@media(max-width:600px){
+
+  body{
+    overflow-x:hidden;
+  }
+
+  .wrap{
+    width:94%;
+    padding-left:0;
+    padding-right:0;
+  }
+
+  /* GLOBAL HEADINGS */
+  .section-head h2,
+  .buyer-orders-header h2,
+  .cart-page-header h2{
+    font-size:27px !important;
+    line-height:1.15;
+  }
+
+  /* GLOBAL BUTTON FEEL */
+  button,
+  .primary,
+  .secondary{
+    min-height:42px;
+  }
+
+  /* CARDS */
+  .card,
+  .buyer-order-card,
+  .order-card,
+  .sell-form-card,
+  .cart-products-panel,
+  .checkout-card{
+    border-radius:16px;
+  }
+
+  /* SHOP */
+  #shop .product-grid{
+    gap:10px;
+  }
+
+  #shop .card-body{
+    padding:10px;
+  }
+
+  /* SELL */
+  #sell .panel{
+    padding:14px;
+  }
+
+  /* DASHBOARD */
+  #dashboard .stats{
+    gap:10px;
+  }
+
+  /* MY ORDERS */
+  #myorders #buyerOrders{
+    gap:16px;
+  }
+
+  /* CART */
+  #cart .cart-layout{
+    gap:16px;
+  }
+
+  /* INPUTS */
+  input,
+  select,
+  textarea{
+    font-size:16px;
+  }
+
+  /* FOOTER */
+  footer{
+    margin-top:32px;
+  }
+}
 
 
 
