@@ -5144,6 +5144,39 @@ footer{
   }
 
 }
+/* ===== SHOP BY CATEGORY IMAGE ZOOM ===== */
+
+.category-photo{
+  cursor:zoom-in;
+}
+
+.category-photo.category-zoomed{
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+
+  width:90vw;
+  height:85vh;
+
+  margin:0;
+  z-index:10000;
+
+  background-size:contain;
+  background-position:center;
+  background-repeat:no-repeat;
+  background-color:#fff;
+
+  border-radius:18px;
+
+  box-shadow:
+    0 0 0 100vmax rgba(0,0,0,.72),
+    0 20px 60px rgba(0,0,0,.35);
+
+  cursor:zoom-out;
+}
+
+
 
 
 
