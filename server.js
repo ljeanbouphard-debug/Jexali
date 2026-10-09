@@ -185,6 +185,44 @@ Thank you for shopping with Jexali!
 
 /* ===== END BUYER SHIPPING EMAIL ===== */
 
+/* ===== SELLER REFUND REQUEST EMAIL ===== */
+
+async function sendSellerRefundRequestEmail(order) {
+
+  const recipient = process.env.RESEND_TEST_EMAIL;
+
+  if (!recipient) {
+    console.log("Refund request email skipped: test email missing");
+    return;
+  }
+
+  const message = `
+Hello Seller!
+
+A buyer has requested a refund on Jexali.
+
+Order Number: #${order.id}
+
+Reason: ${order.reason || "Not specified"}
+
+Please visit your Seller Dashboard
+to review the refund request.
+
+Thank you for selling on Jexali!
+`;
+
+  return sendJexaliEmail({
+    to: recipient,
+    subject: `Jexali Refund Request #${order.id} (TEST)`,
+    text: message
+  });
+
+}
+
+
+
+/* ===== END SELLER REFUND REQUEST EMAIL ===== */
+
 const db = new Pool({connectionString: process.env.DATABASE_URL });
 class PgSessionStore extends session.Store {
 constructor(pool) {
@@ -756,18 +794,18 @@ app.post(
  "/api/upload-product-image",
  (req, res, next) => {
   if (!req.session.sellerId) {
-   return
-   res.status(401).json({ error: "Not signed in" });
-  }
+  return res.status(401).json({ error: "Not signed in" });
+}
   next();
  },
  upload.single("image"),
  async ( req, res) => {
   try {
    if (!req.file) {
-    return
-    res.status(400).json({ error: "No image selected" });
-   }
+  return res.status(400).json({
+    error: "No image selected"
+  });
+}
    const result = await 
    uploadToCloudinary(req.file.buffer);
    res.json({
@@ -915,8 +953,10 @@ const p = req.body
    p.image = await
    uploadUrlToCloudinary(p.image);
   } catch (err) {
-   console.error("Image URL upload failed:", err.message); return
-   res.status(400).json({ error: "Could not save product image" });
+   console.error("Image URL upload failed:", err.message);
+return res.status(400).json({
+  error: "Could not save product image"
+});
   }
  }
  if (!req.session.sellerId) return res.status(401).json({error:'Not signed in'});
@@ -1999,6 +2039,31 @@ app.post('/api/buyer/orders/:id/refund-request', async (req,res)=>{
         ]
       );
 
+    /* ===== SELLER REFUND EMAIL NOTIFICATION ===== */
+
+    try {
+
+      await sendSellerRefundRequestEmail({
+        id: orderId,
+        reason: reason
+      });
+
+      console.log(
+        "Seller refund request email processed:",
+        orderId
+      );
+
+    } catch (emailError) {
+
+      console.error(
+        "Seller refund request email failed:",
+        emailError.message
+      );
+
+    }
+
+    /* ===== END SELLER REFUND EMAIL ===== */
+
     res.status(201).json({
       ok:true,
       refundRequest:
@@ -2567,6 +2632,8 @@ if (process.env.JEXALI_EMAIL_SELF_TEST === "true") {
 app.listen(process.env.PORT || 3000, () => {
   console.log('Jexali API running on port 3000');
 });
+
+
 
 
 
