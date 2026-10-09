@@ -19,6 +19,51 @@ const BASE_URL =
   process.env.BASE_URL ||
   'https://jexali.onrender.com';
 
+/* ===== JEXALI EMAIL NOTIFICATIONS ===== */
+
+async function sendJexaliEmail({ to, subject, text }) {
+
+  const apiKey = process.env.RESEND_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("RESEND_API_KEY is missing");
+  }
+
+  const response = await fetch(
+    "https://api.resend.com/emails",
+    {
+      method: "POST",
+
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+        from:
+          process.env.RESEND_FROM_EMAIL ||
+          "Jexali <onboarding@resend.dev>",
+
+        to: [to],
+        subject,
+        text
+      })
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.message || "Email sending failed"
+    );
+  }
+
+  return result;
+}
+
+/* ===== END EMAIL NOTIFICATIONS ===== */
+
 const db = new Pool({connectionString: process.env.DATABASE_URL });
 class PgSessionStore extends session.Store {
 constructor(pool) {
