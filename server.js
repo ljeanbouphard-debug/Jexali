@@ -64,6 +64,42 @@ async function sendJexaliEmail({ to, subject, text }) {
 
 /* ===== END EMAIL NOTIFICATIONS ===== */
 
+/* ===== BUYER ORDER CONFIRMATION EMAIL ===== */
+
+async function sendBuyerOrderConfirmation(order) {
+
+  // Test mode until Jexali domain is verified
+  const recipient = process.env.RESEND_TEST_EMAIL;
+
+  if (!recipient) {
+    console.log("Order email skipped: test email missing");
+    return;
+  }
+
+  const message = `
+Thank you for shopping with Jexali!
+
+Your order has been confirmed.
+
+Order Number: #${order.id}
+
+Order Total: $${Number(order.amount).toFixed(2)}
+
+We will notify you when your order ships.
+
+Thank you for choosing Jexali!
+`;
+
+  return sendJexaliEmail({
+    to: recipient,
+    subject: `Jexali Order Confirmation #${order.id} (TEST)`,
+    text: message
+  });
+
+}
+
+/* ===== END BUYER ORDER CONFIRMATION ===== */
+
 const db = new Pool({connectionString: process.env.DATABASE_URL });
 class PgSessionStore extends session.Store {
 constructor(pool) {
@@ -422,7 +458,33 @@ async function fulfillCheckoutSession(sessionId){
       );
     }
 
+  
     await client.query("COMMIT");
+
+    /* ===== BUYER ORDER EMAIL ===== */
+
+    try {
+
+      await sendBuyerOrderConfirmation({
+        id: orderId,
+        amount: amount
+      });
+
+      console.log(
+        "Buyer order confirmation processed:",
+        orderId
+      );
+
+    } catch (emailError) {
+
+      console.error(
+        "Buyer order email failed:",
+        emailError.message
+      );
+
+    }
+
+    /* ===== END BUYER ORDER EMAIL ===== */
 
     return {
       ok:true,
@@ -431,6 +493,7 @@ async function fulfillCheckoutSession(sessionId){
       sellerEarnings,
       jexaliFee
     };
+  
 
   }catch(err){
 
