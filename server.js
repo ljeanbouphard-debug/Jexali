@@ -2509,6 +2509,59 @@ res.json({url: link.url, accountId: account.id});
 
 
 
+/* ===== TEMPORARY JEXALI EMAIL TEST ===== */
+
+if (process.env.JEXALI_EMAIL_SELF_TEST === "true") {
+
+  (async () => {
+
+    try {
+
+      if (!process.env.RESEND_TEST_EMAIL) {
+        throw new Error("RESEND_TEST_EMAIL is missing");
+      }
+
+      await sendBuyerOrderConfirmation({
+        id: "TEST-001",
+        amount: 0
+      });
+
+      await sendSellerNewOrderEmail({
+        id: "TEST-001",
+        amount: 0
+      });
+
+      await sendBuyerShippingEmail({
+        id: "TEST-001",
+        status: "Shipped",
+        shipping_carrier: "USPS",
+        tracking_number: "TEST-ONLY"
+      });
+
+      await sendBuyerShippingEmail({
+        id: "TEST-001",
+        status: "Delivered",
+        shipping_carrier: "USPS",
+        tracking_number: "TEST-ONLY"
+      });
+
+      console.log("Jexali email test requests completed");
+
+    } catch (error) {
+
+      console.error(
+        "Jexali email test failed:",
+        error.message
+      );
+
+    }
+
+  })();
+
+}
+
+/* ===== END TEMPORARY EMAIL TEST ===== */
+
 /* ===== START JEXALI SERVER ===== */
 
 app.listen(process.env.PORT || 3000, () => {
