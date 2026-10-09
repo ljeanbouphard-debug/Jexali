@@ -2273,7 +2273,42 @@ type: 'account_onboarding',
 res.json({url: link.url, accountId: account.id});
 });
 
-app.listen(process.env.PORT || 3000, ()=>{
-console.log('Jexali API running on port 3000');
+/* ===== TEMPORARY EMAIL TEST ===== */
+
+app.listen(process.env.PORT || 3000, () => {
+
+  console.log('Jexali API running on port 3000');
+
+  if (process.env.RESEND_TEST_EMAIL) {
+
+    sendJexaliEmail({
+      to: process.env.RESEND_TEST_EMAIL,
+
+      subject: "Jexali Email Test",
+
+      text:
+        "Congratulations! Jexali email notifications are working."
+    })
+
+    .then(result => {
+      console.log(
+        "Jexali test email accepted:",
+        result.id
+      );
+    })
+
+    .catch(error => {
+      console.error(
+        "Jexali email test failed:",
+        error.message
+      );
+    });
+
+  }
+
 });
+
+/* ===== END TEMPORARY EMAIL TEST ===== */
+
+
 
