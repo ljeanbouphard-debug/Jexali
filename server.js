@@ -222,7 +222,46 @@ Thank you for selling on Jexali!
 
 
 /* ===== END SELLER REFUND REQUEST EMAIL ===== */
+/* ===== BUYER REFUND DECISION EMAIL ===== */
 
+async function sendBuyerRefundDecisionEmail(order) {
+
+  const recipient = process.env.RESEND_TEST_EMAIL;
+
+  if (!recipient) {
+    console.log("Refund decision email skipped");
+    return;
+  }
+
+  if (!["Refunded", "Declined"].includes(order.status)) {
+    return;
+  }
+
+  const approved = order.status === "Refunded";
+
+  const message = approved
+    ? `Hello!
+
+Your refund for Jexali Order #${order.id} has been issued.
+
+The time for the money to appear depends on your payment provider.
+
+Thank you for shopping with Jexali!`
+    : `Hello!
+
+Your refund request for Jexali Order #${order.id} was declined.
+
+Please visit My Orders on Jexali for more information.`;
+
+  return sendJexaliEmail({
+    to: recipient,
+    subject: `Jexali Refund #${order.id} - ${order.status} (TEST)`,
+    text: message
+  });
+
+}
+
+/* ===== END BUYER REFUND DECISION EMAIL ===== */
 const db = new Pool({connectionString: process.env.DATABASE_URL });
 class PgSessionStore extends session.Store {
 constructor(pool) {
@@ -2142,7 +2181,30 @@ app.patch('/api/seller/orders/:id/refund-decline', async (req,res)=>{
           "Refund request not found or already decided"
       });
     }
+    /* ===== BUYER REFUND DECLINED EMAIL ===== */
 
+    try {
+
+      await sendBuyerRefundDecisionEmail({
+        id: orderId,
+        status: result.rows[0].status
+      });
+
+      console.log(
+        "Buyer refund declined email processed:",
+        orderId
+      );
+
+    } catch (emailError) {
+
+      console.error(
+        "Buyer refund declined email failed:",
+        emailError.message
+      );
+
+    }
+
+    /* ===== END BUYER REFUND DECLINED EMAIL ===== */
     res.json({
       ok:true,
       refundRequest:
@@ -2284,7 +2346,30 @@ app.post('/api/seller/orders/:id/refund-approve', async (req,res)=>{
           "Refund was already processed"
       });
     }
+    /* ===== BUYER REFUND APPROVED EMAIL ===== */
 
+    try {
+
+      await sendBuyerRefundDecisionEmail({
+        id: orderId,
+        status: updateResult.rows[0].status
+      });
+
+      console.log(
+        "Buyer refund approved email processed:",
+        orderId
+      );
+
+    } catch (emailError) {
+
+      console.error(
+        "Buyer refund approved email failed:",
+        emailError.message
+      );
+
+    }
+
+    /* ===== END BUYER REFUND APPROVED EMAIL ===== */
     res.json({
       ok:true,
       refundRequest:
@@ -2609,7 +2694,15 @@ if (process.env.JEXALI_EMAIL_SELF_TEST === "true") {
         shipping_carrier: "USPS",
         tracking_number: "TEST-ONLY"
       });
+      await sendBuyerRefundDecisionEmail({
+        id: "TEST-001",
+        status: "Refunded"
+      });
 
+      await sendBuyerRefundDecisionEmail({
+        id: "TEST-001",
+        status: "Declined"
+      });
       console.log("Jexali email test requests completed");
 
     } catch (error) {
