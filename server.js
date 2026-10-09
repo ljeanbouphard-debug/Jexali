@@ -137,6 +137,54 @@ Thank you for selling on Jexali!
 
 /* ===== END SELLER NEW ORDER EMAIL ===== */
 
+/* ===== BUYER SHIPPING EMAIL ===== */
+
+async function sendBuyerShippingEmail(order) {
+
+  const recipient = process.env.RESEND_TEST_EMAIL;
+
+  if (!recipient) {
+    console.log("Shipping email skipped: test email missing");
+    return;
+  }
+
+  const status = order.status;
+
+  if (!["Shipped", "Delivered"].includes(status)) {
+    return;
+  }
+
+  const tracking = order.tracking_number
+    ? `
+Carrier: ${order.shipping_carrier || "Not specified"}
+Tracking Number: ${order.tracking_number}
+`
+    : "";
+
+  const message = `
+Hello!
+
+Your Jexali order has been updated.
+
+Order Number: #${order.id}
+
+Order Status: ${status}
+${tracking}
+Visit My Orders on Jexali for more details.
+
+Thank you for shopping with Jexali!
+`;
+
+  return sendJexaliEmail({
+    to: recipient,
+    subject: `Jexali Order #${order.id} - ${status} (TEST)`,
+    text: message
+  });
+
+}
+
+/* ===== END BUYER SHIPPING EMAIL ===== */
+
 const db = new Pool({connectionString: process.env.DATABASE_URL });
 class PgSessionStore extends session.Store {
 constructor(pool) {
@@ -2235,12 +2283,19 @@ SET
       ELSE delivered_at
     END
 
+
 WHERE id = $2
   AND seller_id = $3
+  AND status IS DISTINCT FROM $1
 
-      RETURNING
-        id,
-        status
+
+  
+RETURNING
+  id,
+  status,
+  shipping_carrier,
+  tracking_number
+    
       `,
       [
         status,
@@ -2249,16 +2304,69 @@ WHERE id = $2
       ]
     );
 
+   
     if(!result.rows.length){
-      return res.status(404).json({
-        error:'Order not found'
+
+      const existingOrder = await db.query(
+        `
+        SELECT
+          id,
+          status,
+          shipping_carrier,
+          tracking_number
+        FROM orders
+        WHERE id = $1
+          AND seller_id = $2
+        `,
+        [orderId, sellerId]
+      );
+
+      if(!existingOrder.rows.length){
+        return res.status(404).json({
+          error:'Order not found'
+        });
+      }
+
+      return res.json({
+        ok:true,
+        unchanged:true,
+        order:existingOrder.rows[0]
       });
     }
+ 
+
+  
+    /* ===== BUYER SHIPPING NOTIFICATION ===== */
+
+    const updatedOrder = result.rows[0];
+
+    if (
+      updatedOrder.status === "Shipped" ||
+      updatedOrder.status === "Delivered"
+    ) {
+
+      try {
+
+        await sendBuyerShippingEmail(updatedOrder);
+
+      } catch (emailError) {
+
+        console.error(
+          "Buyer shipping email failed:",
+          emailError.message
+        );
+
+      }
+
+    }
+
+    /* ===== END SHIPPING NOTIFICATION ===== */
 
     res.json({
       ok:true,
-      order:result.rows[0]
+      order:updatedOrder
     });
+  
 
   }catch(err){
 
