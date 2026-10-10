@@ -68,11 +68,11 @@ async function sendJexaliEmail({ to, subject, text }) {
 
 async function sendBuyerOrderConfirmation(order) {
 
-  // Test mode until Jexali domain is verified
-  const recipient = process.env.RESEND_TEST_EMAIL;
+  
+  const recipient = order.buyer_email;
 
   if (!recipient) {
-    console.log("Order email skipped: test email missing");
+   console.log("Order email skipped: buyer email missing"); 
     return;
   }
 
@@ -92,7 +92,7 @@ Thank you for choosing Jexali!
 
   return sendJexaliEmail({
     to: recipient,
-    subject: `Jexali Order Confirmation #${order.id} (TEST)`,
+   subject: `Jexali Order Confirmation #${order.id}`, 
     text: message
   });
 
@@ -104,11 +104,13 @@ Thank you for choosing Jexali!
 
 async function sendSellerNewOrderEmail(order) {
 
-  // Test mode until domain is verified
-  const recipient = process.env.RESEND_TEST_EMAIL;
+  
+  
+const recipient = order.seller_email;
+
 
   if (!recipient) {
-    console.log("Seller email skipped: test email missing");
+    console.log("Seller email skipped: seller email missing");
     return;
   }
 
@@ -129,7 +131,9 @@ Thank you for selling on Jexali!
 
   return sendJexaliEmail({
     to: recipient,
-    subject: `Jexali - New Order #${order.id} (TEST)`,
+    
+subject: `Jexali - New Order #${order.id}`,
+
     text: message
   });
 
@@ -141,10 +145,12 @@ Thank you for selling on Jexali!
 
 async function sendBuyerShippingEmail(order) {
 
-  const recipient = process.env.RESEND_TEST_EMAIL;
+
+const recipient = order.buyer_email;
+  
 
   if (!recipient) {
-    console.log("Shipping email skipped: test email missing");
+   console.log("Shipping email skipped: buyer email missing"); 
     return;
   }
 
@@ -177,7 +183,9 @@ Thank you for shopping with Jexali!
 
   return sendJexaliEmail({
     to: recipient,
-    subject: `Jexali Order #${order.id} - ${status} (TEST)`,
+   
+subject: `Jexali Order #${order.id} - ${status}`,
+ 
     text: message
   });
 
@@ -189,10 +197,12 @@ Thank you for shopping with Jexali!
 
 async function sendSellerRefundRequestEmail(order) {
 
-  const recipient = process.env.RESEND_TEST_EMAIL;
+ 
+const recipient = order.seller_email;
+ 
 
   if (!recipient) {
-    console.log("Refund request email skipped: test email missing");
+   console.log("Refund request email skipped: seller email missing"); 
     return;
   }
 
@@ -213,7 +223,9 @@ Thank you for selling on Jexali!
 
   return sendJexaliEmail({
     to: recipient,
-    subject: `Jexali Refund Request #${order.id} (TEST)`,
+ 
+subject: `Jexali Refund Request #${order.id}`,
+   
     text: message
   });
 
@@ -226,10 +238,12 @@ Thank you for selling on Jexali!
 
 async function sendBuyerRefundDecisionEmail(order) {
 
-  const recipient = process.env.RESEND_TEST_EMAIL;
+  
+const recipient = order.buyer_email;
+
 
   if (!recipient) {
-    console.log("Refund decision email skipped");
+   console.log("Refund decision email skipped: buyer email missing"); 
     return;
   }
 
@@ -255,7 +269,9 @@ Please visit My Orders on Jexali for more information.`;
 
   return sendJexaliEmail({
     to: recipient,
-    subject: `Jexali Refund #${order.id} - ${order.status} (TEST)`,
+    
+subject: `Jexali Refund #${order.id} - ${order.status}`,
+
     text: message
   });
 
@@ -627,10 +643,11 @@ async function fulfillCheckoutSession(sessionId){
 
     try {
 
-      await sendBuyerOrderConfirmation({
-        id: orderId,
-        amount: amount
-      });
+     await sendBuyerOrderConfirmation({
+  id: orderId,
+  amount: amount,
+  buyer_email: buyerEmail
+}); 
 
       console.log(
         "Buyer order confirmation processed:",
@@ -652,10 +669,21 @@ async function fulfillCheckoutSession(sessionId){
 
     try {
 
-      await sendSellerNewOrderEmail({
-        id: orderId,
-        amount: amount
-      });
+      
+const sellerEmailResult = await db.query(
+  `SELECT COALESCE(u.email, s.email) AS email
+   FROM sellers s
+   LEFT JOIN users u ON u.id = s.user_id
+   WHERE s.id = $1`,
+  [sellerId]
+);
+
+await sendSellerNewOrderEmail({
+  id: orderId,
+  amount: amount,
+  seller_email: sellerEmailResult.rows[0]?.email || null
+});
+
 
       console.log(
         "Seller new order email processed:",
@@ -2082,10 +2110,23 @@ app.post('/api/buyer/orders/:id/refund-request', async (req,res)=>{
 
     try {
 
-      await sendSellerRefundRequestEmail({
-        id: orderId,
-        reason: reason
-      });
+const sellerEmailResult = await db.query(
+  `SELECT COALESCE(u.email, s.email) AS email
+   FROM orders o
+   JOIN sellers s ON s.id = o.seller_id
+   LEFT JOIN users u ON u.id = s.user_id
+   WHERE o.id = $1
+     AND o.buyer_user_id = $2`,
+  [orderId, buyerUserId]
+);
+
+   
+await sendSellerRefundRequestEmail({
+  id: orderId,
+  reason: reason,
+  seller_email: sellerEmailResult.rows[0]?.email || null
+});
+   
 
       console.log(
         "Seller refund request email processed:",
@@ -2161,13 +2202,16 @@ app.patch('/api/seller/orders/:id/refund-decline', async (req,res)=>{
           AND o.seller_id = $2
           AND rr.status = 'Requested'
 
-        RETURNING
-          rr.id,
-          rr.order_id,
-          rr.status,
-          rr.reason,
-          rr.message,
-          rr.decided_at
+      
+RETURNING
+  rr.id,
+  rr.order_id,
+  rr.status,
+  rr.reason,
+  rr.message,
+  rr.decided_at,
+  o.buyer_email
+  
         `,
         [
           orderId,
@@ -2185,10 +2229,13 @@ app.patch('/api/seller/orders/:id/refund-decline', async (req,res)=>{
 
     try {
 
-      await sendBuyerRefundDecisionEmail({
-        id: orderId,
-        status: result.rows[0].status
-      });
+      
+await sendBuyerRefundDecisionEmail({
+  id: orderId,
+  status: result.rows[0].status,
+  buyer_email: result.rows[0].buyer_email
+});
+
 
       console.log(
         "Buyer refund declined email processed:",
@@ -2250,11 +2297,14 @@ app.post('/api/seller/orders/:id/refund-approve', async (req,res)=>{
     const result =
       await db.query(
         `
-        SELECT
-          o.id,
-          o.stripe_session_id,
-          rr.id AS refund_request_id,
-          rr.status AS refund_status
+     
+SELECT
+  o.id,
+  o.stripe_session_id,
+  o.buyer_email,
+  rr.id AS refund_request_id,
+  rr.status AS refund_status
+ 
 
         FROM orders o
 
@@ -2350,10 +2400,13 @@ app.post('/api/seller/orders/:id/refund-approve', async (req,res)=>{
 
     try {
 
-      await sendBuyerRefundDecisionEmail({
-        id: orderId,
-        status: updateResult.rows[0].status
-      });
+     
+await sendBuyerRefundDecisionEmail({
+  id: orderId,
+  status: updateResult.rows[0].status,
+  buyer_email: order.buyer_email
+});
+ 
 
       console.log(
         "Buyer refund approved email processed:",
@@ -2440,11 +2493,14 @@ WHERE id = $2
 
 
   
+
 RETURNING
   id,
   status,
   shipping_carrier,
-  tracking_number
+  tracking_number,
+  buyer_email
+
     
       `,
       [
@@ -2659,68 +2715,9 @@ res.json({url: link.url, accountId: account.id});
 
 
 
-/* ===== TEMPORARY JEXALI EMAIL TEST ===== */
 
-if (process.env.JEXALI_EMAIL_SELF_TEST === "true") {
 
-  (async () => {
 
-    try {
-
-      if (!process.env.RESEND_TEST_EMAIL) {
-        throw new Error("RESEND_TEST_EMAIL is missing");
-      }
-
-      await sendBuyerOrderConfirmation({
-        id: "TEST-001",
-        amount: 0
-      });
-
-      await sendSellerNewOrderEmail({
-        id: "TEST-001",
-        amount: 0
-      });
-
-      await sendBuyerShippingEmail({
-        id: "TEST-001",
-        status: "Shipped",
-        shipping_carrier: "USPS",
-        tracking_number: "TEST-ONLY"
-      });
-
-      await sendBuyerShippingEmail({
-        id: "TEST-001",
-        status: "Delivered",
-        shipping_carrier: "USPS",
-        tracking_number: "TEST-ONLY"
-      });
-      await sendBuyerRefundDecisionEmail({
-        id: "TEST-001",
-        status: "Refunded"
-      });
-
-      await sendBuyerRefundDecisionEmail({
-        id: "TEST-001",
-        status: "Declined"
-      });
-      console.log("Jexali email test requests completed");
-
-    } catch (error) {
-
-      console.error(
-        "Jexali email test failed:",
-        error.message
-      );
-
-    }
-
-  })();
-
-}
-
-/* ===== END TEMPORARY EMAIL TEST ===== */
-
-/* ===== START JEXALI SERVER ===== */
 
 app.listen(process.env.PORT || 3000, () => {
   console.log('Jexali API running on port 3000');
