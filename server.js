@@ -40,9 +40,7 @@ async function sendJexaliEmail({ to, subject, text }) {
       },
 
       body: JSON.stringify({
-        from:
-          process.env.RESEND_FROM_EMAIL ||
-          "Jexali <onboarding@resend.dev>",
+       from: process.env.RESEND_FROM_EMAIL, 
 
         to: [to],
         subject,
