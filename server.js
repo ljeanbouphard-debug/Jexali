@@ -21,7 +21,12 @@ const BASE_URL =
 
 /* ===== JEXALI EMAIL NOTIFICATIONS ===== */
 
-async function sendJexaliEmail({ to, subject, text }) {
+async function sendJexaliEmail({
+  to,
+  subject,
+  text,
+  idempotencyKey
+}) {
 
   const apiKey = process.env.RESEND_API_KEY;
 
@@ -29,15 +34,22 @@ async function sendJexaliEmail({ to, subject, text }) {
     throw new Error("RESEND_API_KEY is missing");
   }
 
-  const response = await fetch(
-    "https://api.resend.com/emails",
-    {
-      method: "POST",
+  
+const response = await fetch(
+  "https://api.resend.com/emails",
+  {
+    method: "POST",
 
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
+    signal: AbortSignal.timeout(20000),
+
+
+ headers: {
+  "Authorization": `Bearer ${apiKey}`,
+  "Content-Type": "application/json",
+  ...(idempotencyKey
+    ? { "Idempotency-Key": idempotencyKey }
+    : {})
+},     
 
       body: JSON.stringify({
        from: process.env.RESEND_FROM_EMAIL, 
@@ -88,11 +100,12 @@ We will notify you when your order ships.
 Thank you for choosing Jexali!
 `;
 
-  return sendJexaliEmail({
-    to: recipient,
-   subject: `Jexali Order Confirmation #${order.id}`, 
-    text: message
-  });
+return queueJexaliEmail({
+  eventKey: `buyer-order-confirmation-${order.id}`,
+  to: recipient,
+  subject: `Jexali Order Confirmation #${order.id}`,
+  text: message
+});
 
 }
 
@@ -127,13 +140,12 @@ to review and prepare this order.
 Thank you for selling on Jexali!
 `;
 
-  return sendJexaliEmail({
-    to: recipient,
-    
-subject: `Jexali - New Order #${order.id}`,
-
-    text: message
-  });
+return queueJexaliEmail({
+  eventKey: `seller-new-order-${order.id}`,
+  to: recipient,
+  subject: `Jexali - New Order #${order.id}`,
+  text: message
+});  
 
 }
 
@@ -179,13 +191,12 @@ Visit My Orders on Jexali for more details.
 Thank you for shopping with Jexali!
 `;
 
-  return sendJexaliEmail({
-    to: recipient,
-   
-subject: `Jexali Order #${order.id} - ${status}`,
- 
-    text: message
-  });
+return queueJexaliEmail({
+  eventKey: `buyer-shipping-${order.id}-${status.toLowerCase()}`,
+  to: recipient,
+  subject: `Jexali Order #${order.id} - ${status}`,
+  text: message
+});  
 
 }
 
@@ -219,13 +230,12 @@ to review the refund request.
 Thank you for selling on Jexali!
 `;
 
-  return sendJexaliEmail({
-    to: recipient,
- 
-subject: `Jexali Refund Request #${order.id}`,
-   
-    text: message
-  });
+  return queueJexaliEmail({
+  eventKey: `seller-refund-request-${order.id}`,
+  to: recipient,
+  subject: `Jexali Refund Request #${order.id}`,
+  text: message
+});
 
 }
 
@@ -265,18 +275,249 @@ Your refund request for Jexali Order #${order.id} was declined.
 
 Please visit My Orders on Jexali for more information.`;
 
-  return sendJexaliEmail({
-    to: recipient,
-    
-subject: `Jexali Refund #${order.id} - ${order.status}`,
-
-    text: message
-  });
+ return queueJexaliEmail({
+  eventKey: `buyer-refund-${order.id}-${order.status.toLowerCase()}`,
+  to: recipient,
+  subject: `Jexali Refund #${order.id} - ${order.status}`,
+  text: message
+}); 
 
 }
 
 /* ===== END BUYER REFUND DECISION EMAIL ===== */
 const db = new Pool({connectionString: process.env.DATABASE_URL });
+/* ===== JEXALI PERMANENT EMAIL QUEUE ===== */
+
+db.query(`
+  CREATE TABLE IF NOT EXISTS email_outbox (
+    id BIGSERIAL PRIMARY KEY,
+    event_key TEXT NOT NULL UNIQUE,
+    recipient TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    body TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    attempts INTEGER NOT NULL DEFAULT 0,
+    next_attempt_at TIMESTAMPTZ DEFAULT NOW(),
+    last_error TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    sent_at TIMESTAMPTZ
+  )
+
+
+`).then(async () => {
+
+  await db.query(`
+    ALTER TABLE email_outbox
+    ADD COLUMN IF NOT EXISTS resend_email_id TEXT
+  `);
+
+console.log("Jexali email queue ready");
+
+runJexaliEmailWorker();
+
+setInterval(runJexaliEmailWorker, 30000);  
+
+
+}).catch(error => {
+
+  console.error(
+    "Email queue setup failed:",
+    error.message
+  );
+
+});
+
+
+/* ===== END EMAIL QUEUE ===== */
+/* ===== SAVE JEXALI EMAIL TO QUEUE ===== */
+
+async function queueJexaliEmail({
+  eventKey,
+  to,
+  subject,
+  text
+}) {
+
+  if (!eventKey || !to || !subject || !text) {
+    throw new Error("Missing email information");
+  }
+
+  const result = await db.query(
+    `
+    INSERT INTO email_outbox (
+      event_key,
+      recipient,
+      subject,
+      body
+    )
+
+    VALUES ($1, $2, $3, $4)
+
+    ON CONFLICT (event_key)
+    DO NOTHING
+
+    RETURNING id
+    `,
+    [
+      eventKey,
+      to,
+      subject,
+      text
+    ]
+  );
+
+  return result.rows[0]?.id || null;
+}
+
+/* ===== END SAVE EMAIL TO QUEUE ===== */
+/* ===== PROCESS JEXALI EMAIL QUEUE ===== */
+
+async function processNextJexaliEmail() {
+
+  const result = await db.query(`
+    WITH selected AS (
+      SELECT id
+      FROM email_outbox
+      WHERE status IN ('pending', 'processing')
+        AND next_attempt_at <= NOW()
+        AND attempts < 5
+      ORDER BY id
+      FOR UPDATE SKIP LOCKED
+      LIMIT 1
+    )
+
+    UPDATE email_outbox AS e
+    SET
+      status = 'processing',
+      attempts = e.attempts + 1,
+      next_attempt_at = NOW() + INTERVAL '5 minutes'
+    FROM selected
+    WHERE e.id = selected.id
+    RETURNING e.*
+  `);
+
+  const email = result.rows[0];
+
+  if (!email) {
+    return false;
+  }
+
+  try {
+
+   
+const resendResult = await sendJexaliEmail({
+  to: email.recipient,
+  subject: email.subject,
+  text: email.body,
+  idempotencyKey: `jexali-email-${email.id}`
+});
+ 
+
+    
+await db.query(`
+  UPDATE email_outbox
+  SET
+    status = 'sent',
+    sent_at = NOW(),
+    last_error = NULL,
+    resend_email_id = $2
+  WHERE id = $1
+`, [
+  email.id,
+  resendResult.id || null
+]);
+
+
+    console.log("Jexali email accepted:", email.id);
+
+  } catch (error) {
+
+    await db.query(`
+      UPDATE email_outbox
+      SET
+        status = CASE
+          WHEN attempts >= 5 THEN 'failed'
+          ELSE 'pending'
+        END,
+        next_attempt_at = NOW() + INTERVAL '5 minutes',
+        last_error = $2
+      WHERE id = $1
+    `, [
+      email.id,
+      String(error.message || error).slice(0, 500)
+    ]);
+
+    console.error(
+      "Jexali queued email failed:",
+      error.message
+    );
+  }
+
+  return true;
+}
+
+/* ===== END PROCESS EMAIL QUEUE ===== */
+/* ===== AUTOMATIC JEXALI EMAIL WORKER ===== */
+
+let jexaliEmailWorkerRunning = false;
+
+async function runJexaliEmailWorker() {
+
+  if (jexaliEmailWorkerRunning) return;
+
+  jexaliEmailWorkerRunning = true;
+
+  
+  try {
+
+    /* ===== RECOVER STUCK EMAILS ===== */
+
+    const stuckEmails = await db.query(`
+      UPDATE email_outbox
+      SET
+        status = 'failed',
+        last_error = COALESCE(
+          last_error,
+          'Email processing interrupted after 5 attempts'
+        )
+      WHERE status = 'processing'
+        AND attempts >= 5
+        AND next_attempt_at <= NOW()
+      RETURNING id
+    `);
+
+    if (stuckEmails.rowCount > 0) {
+      console.error(
+        "Jexali emails requiring review:",
+        stuckEmails.rows.map(email => email.id)
+      );
+    }
+
+    /* ===== END RECOVERY ===== */
+
+    for (let i = 0; i < 10; i++) {
+
+
+      const processed = await processNextJexaliEmail();
+
+      if (!processed) break;
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Jexali email worker error:",
+      error.message
+    );
+
+  } finally {
+
+    jexaliEmailWorkerRunning = false;
+
+  }
+}
+
+/* ===== END AUTOMATIC EMAIL WORKER ===== */
 class PgSessionStore extends session.Store {
 constructor(pool) {
 super();
@@ -2647,11 +2888,12 @@ app.patch('/api/seller/orders/:id/tracking', async (req,res)=>{
       WHERE id = $3
         AND seller_id = $4
 
-      RETURNING
-        id,
-        shipping_carrier,
-        tracking_number,
-        status
+    RETURNING
+  id,
+  shipping_carrier,
+  tracking_number,
+  status,
+  buyer_email 
       `,
       [
         shippingCarrier,
@@ -2666,6 +2908,55 @@ app.patch('/api/seller/orders/:id/tracking', async (req,res)=>{
         error:'Order not found'
       });
     }
+
+/* ===== BUYER TRACKING EMAIL ===== */
+
+try {
+
+  const order = result.rows[0];
+
+  if (order.buyer_email) {
+
+    await queueJexaliEmail({
+      eventKey:
+        `buyer-tracking-${order.id}-${order.shipping_carrier}-${order.tracking_number}`,
+
+      to: order.buyer_email,
+
+      subject:
+        `Jexali Order #${order.id} - Tracking Information`,
+
+      text: `
+Hello!
+
+Tracking information is now available
+for your Jexali order.
+
+Order Number: #${order.id}
+
+Carrier: ${order.shipping_carrier}
+
+Tracking Number: ${order.tracking_number}
+
+Visit My Orders on Jexali
+to track your package.
+
+Thank you for shopping with Jexali!
+`
+    });
+
+  }
+
+} catch (emailError) {
+
+  console.error(
+    "Buyer tracking email queue failed:",
+    emailError.message
+  );
+
+}
+
+/* ===== END BUYER TRACKING EMAIL ===== */
 
     res.json({
       ok:true,
